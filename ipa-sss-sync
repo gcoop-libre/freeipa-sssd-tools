@@ -1,0 +1,145 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2021 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+EXPIRE=0
+
+function die()
+{
+  echo >&2 "ERROR: $1"
+  exit 1
+}
+
+[[ -z "$1" ]] && die "EMPTY sAMAccountName"
+sAMAccountName="$1"
+
+function ad2date()
+{
+  t="$1"
+  o=$((134774*24*60*60))
+  u=$((t/10000000-o))
+  [[ "$t" = '0'                   ]] && u=0
+  [[ "$t" = '9223372036854775807' ]] && u=0
+  date --utc -d @$u +'%F %H:%M'
+}
+
+function ldaps()
+{
+  local D
+  local F
+  local L
+  local H
+  local P
+
+  D='OU=it,DC=example,DC=org'
+  F="(&(objectClass=user)(objectCategory=person)(sAMAccountName=$1))"
+  L='admin@example.org'
+  H='10.1.0.1:389'
+  P='FiXMe'
+
+ldapsearch         \
+  -h $H            \
+  -w $P            \
+  -D $L            \
+  -LLL             \
+  -b "$D"          \
+  -s sub "$F"      \
+  -o ldif-wrap=no  \
+  userAccountControl accountExpires 2>adsearch.error \
+  | grep -E '(userAccountControl|accountExpires):'   \
+  | while read -r K V
+  do
+    [[ "$K" = 'accountExpires:' ]] && V="$(ad2date "$V")"
+    printf "%s %s\\n" "$K" "$V"
+  done
+}
+
+function lds()
+{
+  local K
+  local V
+  local A
+  local I
+  local H
+  local F
+  local D
+
+A='example.org'
+I="ipa.$A"
+H="/var/lib/sss/db/cache_${I}.ldb"
+D="name=$1@$A,cn=users,cn=$A,cn=sysdb"
+F='(objectCategory=user)'
+
+ldbsearch -H "$H" -b "$D" -s sub "$F" \
+adAccountExpires adUserAccountControl dataExpireTimestamp 2>/dev/null \
+  | grep -vE '^(#|dn:)' \
+  | while read -r K V
+do
+
+  case "$K" in
+    adAccountExpires:)
+      [[ "$V" = '9223372036854775807' ]] && V=0
+      V="$(ad2date $V) ($V)"
+    ;;
+    lastUpdate:|dataExpireTimestamp:)
+      V="$(date --utc -d "@$V" +'%F %H:%M') ($V)"
+    ;;
+  esac
+
+  printf "%s %s\\n" "$K" "$V"
+done
+
+}
+
+AD_SRC="$(ldaps "$sAMAccountName")"
+AD_UAC="$(echo "$AD_SRC" | awk '/userAccountControl:/ {print $2}')"
+AD_EXP="$(echo "$AD_SRC" | awk '/accountExpires:/     {print $2}')"
+
+SS_SRC="$(lds "$sAMAccountName")"
+SS_UAC="$(echo "$SS_SRC" | awk '/adUserAccountControl:/ {print $2}')"
+SS_EXP="$(echo "$SS_SRC" | awk '/adAccountExpires:/     {print $2}')"
+SS_DEX="$(echo "$SS_SRC" | awk '/dataExpireTimestamp:/  {print $2}')"
+
+[[ -z "$AD_EXP" ]] && die "EMPTY AD_EXP"
+[[ -z "$SS_EXP" ]] && die "EMPTY SS_EXP"
+
+[[ "$AD_UAC" != "$SS_UAC" ]] && EXPIRE=1
+[[ "$AD_EXP" != "$SS_EXP" ]] && EXPIRE=1
+
+if [[ "$EXPIRE" -eq 1 ]]
+then
+  USERNAME="${1}@example.org"
+  NOW="$(date +'%F %H:%M')"
+
+  printf "%s sAMAccountName: %s " "$NOW" "$1"
+
+  printf "userAccountControl: %6s adUserAccountControl: %6s accountExpires: %s adAccountExpires: %s dataExpireTimestamp: %s " \
+         "$AD_UAC" "$SS_UAC"  \
+         "$AD_EXP" "$SS_EXP"  \
+         "$SS_DEX"
+
+  sss_cache -u "$USERNAME" >/dev/null
+  id "$USERNAME"           >/dev/null 
+
+  SS_ESS="$(lds "$1")"
+  SS_NAX="$(echo "$SS_ESS" | awk '/adAccountExpires:/     {print $2}')"
+  SS_NAC="$(echo "$SS_ESS" | awk '/adUserAccountControl:/ {print $2}')"
+  SS_NDX="$(echo "$SS_ESS" | awk '/dataExpireTimestamp:/  {print $2}')"
+
+  printf "newDataExpireTimestamp: %s newAdUserAccountControl: %s newAdAccountExpires: %s\\n" "$SS_NDX" "$SS_NAC" "$SS_NAX"
+
+fi
