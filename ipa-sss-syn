@@ -16,54 +16,255 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-EXPIRE=0
+# shellcheck disable=SC2153
+# shellcheck disable=SC2086
+# shellcheck disable=SC2046
+# shellcheck disable=SC2001
+
+START="$(date -u -d 'now' +'%s')"
+BIN="$(basename "$0")"
+[[ -z "$LOG" ]] && LOG='/var/log/ipa-sss-syn.log'
+[[ -z "$ERR" ]] && ERR='/var/log/ipa-sss-syn.err'
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` IPA SSSD Synchronize Cache
+
+### Usage
+
+\`\`\`bash
+
+  [IPA_SSS_SYN_SHOW=1] [IPA_SSS_SYN_DEBUG=1] $BIN sAMAccountName
+
+\`\`\`
+
+### Description
+
+  Search \`sAMAccountName\` attributes in external
+  _LDAP/ActiveDirectory_ and _SSSD_ local cache and
+  force synchronization (require SUDO or root) comparing
+  \`userAccountControl\` with \`adUserAccountControl\` and
+  \`accountExpires\` with \`adAccountExpires\`.
+
+### Example
+
+\`\`\`bash
+
+  $BIN admin
+
+\`\`\`
+
+### Standard Output
+
+\`\`\`
+
+  2021-11-25
+  09:49
+  user                       root
+  sAMAccountName             admin
+  lockoutTime                1970-01-01T00:00
+  pwdLastSet                 2021-11-23T12:51
+  pwdExpireDate              2021-12-23
+  pwdExpireDays              27
+  pwdExpired                 0
+  physicalDeliveryOfficeName 12345678
+  lastLogon                  2021-11-25
+  userAccountControl         512
+  adUserAccountControl       512
+  accountExpires             1970-01-01T00:00
+  accountExpiresDays         0
+  accountExpired             0
+  adAccountExpires           1970-01-01T00:00
+  dataExpireTimestamp        2021-11-25T18:37
+  sss_cache                  0
+  newDataExpireTimestamp     2021-11-25T18:37
+  newAdUserAccountControl    512
+  newAdAccountExpires        1970-01-01T00:00
+  error                      0
+  seconds                    1
+
+\`\`\`
+
+### Debug Output
+
+\`\`\`
+
+  physicalDeliveryOfficeName 12345678
+  userAccountControl         512
+  lastLogon                  2021-11-25       11:50 (132823146503300910)
+  pwdLastSet                 2021-11-23       12:51 (132821454705963591)
+  accountExpires             1970-01-01       00:00 (0)
+  lockoutTime                1970-01-01       00:00 (0)
+  adUserAccountControl       512
+  adAccountExpires           1970-01-01       00:00 (0)
+  dataExpireTimestamp        2021-11-25       18:37 (1637865468)
+  sAMAccountName             admin
+  AD_LCK                     1970-01-01T00:00
+  AD_PWD                     2021-11-23T12:51
+  AD_UAC                     512
+  SS_UAC                     512
+  AD_EXP                     1970-01-01T00:00
+  SS_DEX                     2021-11-25T18:37
+  SS_SEC                     1637865420
+  EXPIRE                     0
+
+\`\`\`
+
+### Environment Variables
+
+  \`IPA_SSS_SYN_DEBUG=(0|1) Default: 0\`
+
+    Show or hide debug variables, ldapsearch and ldbsearch output.
+
+  \`IPA_SSS_SYN_SHOW=(0|1)  Default: 1\`
+
+    Show or hide output log.
+
+  \`IPA_SSS_SYN_PIVOT=(0|1) Default: 1\`
+
+    Enable to show in two columns format or Disable to show one line.
+
+### Config Example
+
+  Write config in \`~/.ipa-config\`:
+
+\`\`\`
+
+  # LDAP/AD
+  LDAP_BIND_DN: OU=users,DC=addomain,DC=com
+  LDAP_DOMAIN: addomain.com
+  LDAP_HOST: 10.0.0.1:389
+  LDAP_LDIF_WRAP: no
+  LDAP_NET_TIMEOUT: 5
+  LDAP_PASS: 53cr37
+  LDAP_SCOPE: sub
+  LDAP_SEARCH_BASE: OU=users,DC=addomain,DC=com
+  LDAP_USER: admin@addomain.com
+  # LDB
+  IPA_DOMAIN: ipa.addomain.com
+  LDB_FILTER: (objectCategory=user)
+  LDB_HOST: /var/lib/sss/db/cache_ipa.addomain.com.ldb
+  MAX_PWD_AGE: 30
+
+\`\`\`
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+
+function defaults()
+{
+
+  NOW="$(date +'%F %H:%M')"
+  OUT=''
+  IPA_CONFIG="$HOME/.ipa-config"
+  DEBUG=0
+  SHOW=1
+  PIVOT=1
+  ACOLA=26
+  ACOLB=16
+  EXPIRE=0
+  NOT_FOUND=0
+  ERROR=0
+  AD_UAC='0'
+  EXPIRED='0'
+  PWD_DAY='0'
+  SS_NAC='0'
+  SS_UAC='0'
+  AD_EXP='1970-01-01 00:00'
+  AD_LCK='1970-01-01 00:00'
+  AD_PWD='1970-01-01 00:00'
+  SS_DEX='1970-01-01 00:00'
+  SS_EXP='1970-01-01 00:00'
+  SS_NAX='1970-01-01 00:00'
+  SS_NDX='1970-01-01 00:00'
+  SS_SXP='1970-01-01 00:00'
+  AD_LOG='1970-01-01 00:00'
+  AD_OFF='0'
+  AD_DAY=0
+  AD_DEX=0
+
+  USR="$USER"
+  [[ -z "$SUDO_USER" ]] || USR="$SUDO_USER"
+
+}
 
 function die()
 {
-  echo >&2 "ERROR: $1"
+  echo >&2 "$1"
   exit 1
 }
 
-[[ -z "$1" ]] && die "EMPTY sAMAccountName"
-sAMAccountName="$1"
+function cfg()
+{
+  die "$EMPTY $1 TRY DEFINE IN $IPA_CONFIG"
+}
+
+trim_lzeros()
+{
+  echo "$1" | sed 's/^0*//g'
+}
 
 function ad2date()
 {
-  t="$1"
-  o=$((134774*24*60*60))
-  u=$((t/10000000-o))
-  [[ "$t" = '0'                   ]] && u=0
-  [[ "$t" = '9223372036854775807' ]] && u=0
-  date --utc -d @$u +'%F %H:%M'
+  local T
+  local O
+  local U
+
+  T="$1"
+  O=$((134774*24*60*60))
+  U=$((T/10000000-O))
+  [[ "$T" = '0'                   ]] && U='0'
+  [[ "$T" = '9223372036854775807' ]] && U='0'
+  date --utc -d @$U +'%F %H:%M'
 }
 
 function ldaps()
 {
-  local D
-  local F
-  local L
-  local H
-  local P
+  local LDAP_FILTER
+  LDAP_FILTER="(&(objectClass=user)(objectCategory=person)(sAMAccountName=$sAMAccountName))"
+  LDAP_OPTIONS=''
+  LDAP_OPTIONS+=" -o nettimeout=$LDAP_NET_TIMEOUT"
+  LDAP_OPTIONS+=" -o ldif-wrap=$LDAP_LDIF_WRAP"
 
-  D='OU=it,DC=example,DC=org'
-  F="(&(objectClass=user)(objectCategory=person)(sAMAccountName=$1))"
-  L='admin@example.org'
-  H='10.1.0.1:389'
-  P='FiXMe'
+  LDAP_REGEX='(userAccountControl|accountExpires|pwdLastSet|lockoutTime|lastLogon|physicalDeliveryOfficeName):'
 
-ldapsearch         \
-  -h $H            \
-  -w $P            \
-  -D $L            \
-  -LLL             \
-  -b "$D"          \
-  -s sub "$F"      \
-  -o ldif-wrap=no  \
-  userAccountControl accountExpires 2>adsearch.error \
-  | grep -E '(userAccountControl|accountExpires):'   \
+ldapsearch                        \
+  -h "$LDAP_HOST"                 \
+  -w "$LDAP_PASS"                 \
+  -D "$LDAP_USER"                 \
+  -LLL                            \
+  -b "$LDAP_SEARCH_BASE"          \
+  -s "$LDAP_SCOPE" "$LDAP_FILTER" \
+      $LDAP_OPTIONS               \
+  lockoutTime                     \
+  userAccountControl              \
+  accountExpires                  \
+  pwdLastSet                      \
+  physicalDeliveryOfficeName      \
+  lastLogon                       \
+  2>> "$ERR"                      \
+  | grep -E "$LDAP_REGEX"         \
   | while read -r K V
   do
-    [[ "$K" = 'accountExpires:' ]] && V="$(ad2date "$V")"
+
+    case "$K" in
+      lockoutTime:|accountExpires:|pwdLastSet:|lastLogon:)
+        V="$(ad2date "$V") ($V)"
+      ;;
+      userAccountControl:|physicalDeliveryOfficeName:)
+        V="$V"
+      ;;
+      *)
+        continue
+      ;;
+    esac
+
     printf "%s %s\\n" "$K" "$V"
   done
 }
@@ -72,21 +273,18 @@ function lds()
 {
   local K
   local V
-  local A
-  local I
-  local H
-  local F
-  local D
 
-A='example.org'
-I="ipa.$A"
-H="/var/lib/sss/db/cache_${I}.ldb"
-D="name=$1@$A,cn=users,cn=$A,cn=sysdb"
-F='(objectCategory=user)'
+LDB_SEARCH_BASE="name=$1@$LDAP_DOMAIN,cn=users,cn=$LDAP_DOMAIN,cn=sysdb"
 
-ldbsearch -H "$H" -b "$D" -s sub "$F" \
-adAccountExpires adUserAccountControl dataExpireTimestamp 2>/dev/null \
-  | grep -vE '^(#|dn:)' \
+ldbsearch                 \
+  -H "$LDB_HOST"          \
+  -b "$LDB_SEARCH_BASE"   \
+     adAccountExpires     \
+     adUserAccountControl \
+     dataExpireTimestamp  \
+     2>> "$ERR"           \
+  | grep -vE '^(#|dn:)'   \
+  | grep -vE '^$'         \
   | while read -r K V
 do
 
@@ -95,51 +293,437 @@ do
       [[ "$V" = '9223372036854775807' ]] && V=0
       V="$(ad2date $V) ($V)"
     ;;
+    adUserAccountControl:)
+      V="$V"
+    ;;
     lastUpdate:|dataExpireTimestamp:)
       V="$(date --utc -d "@$V" +'%F %H:%M') ($V)"
+    ;;
+    *)
+      continue
     ;;
   esac
 
   printf "%s %s\\n" "$K" "$V"
+
 done
 
 }
 
+function ad_get()
+{
+  case "$1" in
+    accountExpires|lockoutTime|pwdLastSet)
+      echo -e "$AD_SRC" | awk "/$1:/ {printf \"%s %s\",\$2,\$3}"
+    ;;
+    *)
+      echo -e "$AD_SRC" | awk "/$1:/ {printf \"%s\",\$2}"
+    ;;
+  esac
+}
+
+function ad_get_number()
+{
+  ad_get "$1" | grep -Eo '[0-9]+'
+}
+
+function ad_get_date()
+{
+  ad_get "$1" | grep -Eo '[0-9:\ \-]+'
+}
+
+function ss_get()
+{
+  case "$1" in
+    adAccountExpires|dataExpireTimestamp)
+      echo "$SS_SRC" | awk "/$1:/ {printf \"%s %s\",\$2,\$3}"
+    ;;
+    *)
+      echo "$SS_SRC" | awk "/$1:/ {printf \"%s\",\$2}"
+    ;;
+  esac
+}
+
+function ss_get_number()
+{
+  ss_get "$1" | grep -Eo '[0-9]+'
+}
+
+function ss_get_date()
+{
+  ss_get "$1" | grep -Eo '[0-9:\ \-]+' | sed 's/^ \+//g' | sed 's/ \+$//g'
+}
+
+function ad_search()
+{
+
 AD_SRC="$(ldaps "$sAMAccountName")"
-AD_UAC="$(echo "$AD_SRC" | awk '/userAccountControl:/ {print $2}')"
-AD_EXP="$(echo "$AD_SRC" | awk '/accountExpires:/     {print $2}')"
+
+[[ -z "$AD_SRC"          ]] && NOT_FOUND=1
+[[    "$NOT_FOUND" -eq 1 ]] && return
+
+AD_EXP="$(ad_get_date   'accountExpires')"
+AD_LCK="$(ad_get_date   'lockoutTime')"
+AD_PWD="$(ad_get_date   'pwdLastSet')"
+AD_UAC="$(ad_get_number 'userAccountControl')"
+AD_OFF="$(ad_get_number 'physicalDeliveryOfficeName')"
+AD_LOG="$(ad_get_date   'lastLogon')"
+
+## convert accountExpires to epoc
+AD_SXP="$(date -u -d "$AD_EXP" +%s)"
+
+}
+
+function ss_search()
+{
+
+[[    "$NOT_FOUND" -eq 1 ]] && return
 
 SS_SRC="$(lds "$sAMAccountName")"
-SS_UAC="$(echo "$SS_SRC" | awk '/adUserAccountControl:/ {print $2}')"
-SS_EXP="$(echo "$SS_SRC" | awk '/adAccountExpires:/     {print $2}')"
-SS_DEX="$(echo "$SS_SRC" | awk '/dataExpireTimestamp:/  {print $2}')"
 
-[[ -z "$AD_EXP" ]] && die "EMPTY AD_EXP"
-[[ -z "$SS_EXP" ]] && die "EMPTY SS_EXP"
+SS_UAC="$(ss_get_number 'adUserAccountControl')"
+SS_EXP="$(ss_get_date   'adAccountExpires')"
+SS_DEX="$(ss_get_date   'dataExpireTimestamp')"
+SS_SEC="$(date -u -d "$SS_DEX" +%s)"
 
-[[ "$AD_UAC" != "$SS_UAC" ]] && EXPIRE=1
-[[ "$AD_EXP" != "$SS_EXP" ]] && EXPIRE=1
+## convert adAccountExpires to epoc
+SS_SXP="$(date -u -d "$SS_EXP" +%s)"
 
-if [[ "$EXPIRE" -eq 1 ]]
+}
+
+function cols2stderr()
+{
+
+[[ -z "$1" ]] && return
+
+if [[ -z "$2" ]]
 then
-  USERNAME="${1}@example.org"
-  NOW="$(date +'%F %H:%M')"
+  printf "%-*s\\n" "$ACOLA" "$1" >&2
+else
 
-  printf "%s sAMAccountName: %s " "$NOW" "$1"
+  if [[ -z "$3" ]]
+  then
 
-  printf "userAccountControl: %6s adUserAccountControl: %6s accountExpires: %s adAccountExpires: %s dataExpireTimestamp: %s " \
-         "$AD_UAC" "$SS_UAC"  \
-         "$AD_EXP" "$SS_EXP"  \
-         "$SS_DEX"
+    printf "%-*s %-*s\\n" "$ACOLA" "$1" "$ACOLB" "$2" >&2
 
-  sss_cache -u "$USERNAME" >/dev/null
-  id "$USERNAME"           >/dev/null 
+  else
 
-  SS_ESS="$(lds "$1")"
-  SS_NAX="$(echo "$SS_ESS" | awk '/adAccountExpires:/     {print $2}')"
-  SS_NAC="$(echo "$SS_ESS" | awk '/adUserAccountControl:/ {print $2}')"
-  SS_NDX="$(echo "$SS_ESS" | awk '/dataExpireTimestamp:/  {print $2}')"
+    printf "%-*s %-*s %s %s\\n" "$ACOLA" "$1" "$ACOLB" "$2" "$3" "$4" >&2
 
-  printf "newDataExpireTimestamp: %s newAdUserAccountControl: %s newAdAccountExpires: %s\\n" "$SS_NDX" "$SS_NAC" "$SS_NAX"
+  fi
 
 fi
+
+}
+
+function debug()
+{
+
+[[ "$DEBUG" -ne 1 ]] && return
+
+echo "$AD_SRC" | while read -r A B C D
+do
+  cols2stderr "${A//:/}" "$B" "$C" "$D"
+done
+
+echo "$SS_SRC" | while read -r A B C D
+do
+  cols2stderr "${A//:/}" "$B" "$C" "$D"
+done
+
+cols2stderr 'sAMAccountName' "$sAMAccountName"
+cols2stderr 'AD_LCK'         "${AD_LCK// /T}"
+cols2stderr 'AD_PWD'         "${AD_PWD// /T}"
+cols2stderr 'AD_UAC'         "$AD_UAC"
+cols2stderr 'SS_UAC'         "$SS_UAC"
+cols2stderr 'AD_EXP'         "${AD_EXP// /T}"
+cols2stderr 'SS_DEX'         "${SS_DEX// /T}"
+cols2stderr 'SS_SEC'         "${SS_SEC// /T}"
+cols2stderr 'EXPIRE'         "$EXPIRE"
+
+}
+
+function expire()
+{
+
+  local SECONDS
+
+  SECONDS="$(date -u -d 'now' +'%s')"
+
+[[    "$NOT_FOUND" -eq 1 ]] && return
+
+if [[ "$SS_SEC" -ne 0 ]]
+then
+
+  # FIXME dataExpireTimestamp = 1 => 1970-01-01 00:00 => 0
+  if [[ "$SS_SEC" -le "$SECONDS" ]]
+  then
+    # dataExpireTimestamp = 1970-01-01
+    [[ "$SS_DEX" != '1970-01-01 00:00' ]] && EXPIRE=1
+  fi
+
+fi
+
+if [[ -z "$AD_EXP" ]]
+then
+  EXPIRE=1
+  AD_EXP='1970-01-01 00:00'
+fi
+
+if [[ -z "$AD_LCK" ]]
+then
+  AD_LCK='1970-01-01 00:00'
+fi
+
+if [[ -z "$SS_EXP" ]]
+then
+  EXPIRE=1
+  SS_EXP='1970-01-01 00:00'
+fi
+
+## expire if accountExpires != adAccountExpires
+if [[ "$AD_EXP" != "$SS_EXP" ]]
+then
+
+  ## don't expire if accountExpires > NOW
+  if [[ "$AD_SXP" -gt "$SECONDS" ]]
+  then
+    ## don't expire if adAccountExpires > NOW
+    if [[ "$SS_SXP" -gt "$SECONDS" ]]
+    then
+      EXPIRE=0
+    else
+      EXPIRE=1
+    fi
+  else
+    EXPIRE=1
+  fi
+
+fi
+
+if [[ -z "$AD_PWD" ]]
+then
+  EXPIRE=1
+  AD_PWD='1970-01-01 00:00'
+fi
+
+if [[ -z "$AD_UAC" ]]
+then
+  EXPIRE=1
+  AD_UAC='0'
+fi
+
+[[ "$AD_UAC" -ne "$SS_UAC" ]] && EXPIRE=1
+[[ "$AD_UAC"  != "$SS_UAC" ]] && EXPIRE=1
+
+[[ -z "$AD_SRC" ]] && EXPIRE=0
+
+SS_NAC="$SS_UAC"
+SS_NAX="$SS_EXP"
+SS_NDX="$SS_DEX"
+
+[[ "$EXPIRE" -ne 1 ]] && return
+
+sss_cache -u "$USERNAME" >/dev/null 2>> "$ERR"
+id "$USERNAME"           >/dev/null 2>> "$ERR"
+SS_SRC="$(lds "$sAMAccountName")"
+
+SS_NAX="$(ss_get_date   'adAccountExpires')"
+SS_NAC="$(ss_get_number 'adUserAccountControl')"
+SS_NDX="$(ss_get_date   'dataExpireTimestamp')"
+
+}
+
+function error()
+{
+
+  # General errors
+  [[    "$NOT_FOUND" -eq 1 ]] && ERROR=1
+
+  # AD errors
+  [[ -z "$AD_SRC"          ]] && ERROR=20
+  [[    "$AD_UAC"    -eq 0 ]] && ERROR=21
+  [[ -z "$AD_UAC"          ]] && ERROR=21
+  [[ -z "$AD_EXP"          ]] && ERROR=22
+  [[ -z "$AD_LCK"          ]] && ERROR=23
+  [[ -z "$AD_PWD"          ]] && ERROR=24
+
+  # LDB errors
+  [[ -z "$SS_SRC"          ]] && ERROR=30
+  [[ -z "$SS_NAC"          ]] && ERROR=31
+  [[ -z "$SS_NAX"          ]] && ERROR=32
+  [[ -z "$SS_NDX"          ]] && ERROR=33
+
+}
+
+function log()
+{
+
+# fix empty adAccountExpires after expire sss_cache
+[[ -z "$SS_NAX" ]] && SS_NAX='1970-01-01 00:00'
+
+printf '%s '                             "$NOW"
+printf 'user=%s '                        "$USR"
+printf 'sAMAccountName=%s '              "$sAMAccountName"
+printf 'lockoutTime=%s '                 "${AD_LCK// /T}"
+printf 'pwdLastSet=%s '                  "${AD_PWD// /T}"
+printf 'pwdExpireDate=%s '               "${PWD_EXP// /T}"
+printf 'pwdExpireDays=%0d '              "$PWD_DAY"
+printf 'pwdExpired=%0d '                 "$EXPIRED"
+printf 'physicalDeliveryOfficeName=%0d ' "$(trim_lzeros "$AD_OFF")"
+printf 'lastLogon=%s '                   "${AD_LOG// /T}"
+printf 'userAccountControl=%s '          "$AD_UAC"
+printf 'adUserAccountControl=%s '        "$SS_UAC"
+printf 'accountExpires=%s '              "${AD_EXP// /T}"
+printf 'accountExpiresDays=%s '          "${AD_DAY// /T}"
+printf 'accountExpired=%s '              "$AD_DEX"
+printf 'adAccountExpires=%s '            "${SS_EXP// /T}"
+printf 'dataExpireTimestamp=%s '         "${SS_DEX// /T}"
+printf 'sss_cache=%0d '                  "$EXPIRE"
+printf 'newDataExpireTimestamp=%s '      "${SS_NDX// /T}"
+printf 'newAdUserAccountControl=%s '     "$SS_NAC"
+printf 'newAdAccountExpires=%s '         "${SS_NAX// /T}"
+printf 'error=%0d '                      "$ERROR"
+END="$(date -u -d 'now' +'%s')"
+SECONDS="$((END-START))"
+printf 'seconds=%0d'                     "$SECONDS"
+
+}
+
+function pivotlog()
+{
+
+  echo "$OUT" | grep -v '^$' | tr ' ' '\n' | while IFS='=' read -r A B
+  do
+    printf "%-*s %-*s\\n" "$ACOLA" "$A" "$ACOLB" "$B"
+  done
+
+}
+
+function params()
+{
+
+  [[ -z "$1" ]] && die "EMPTY sAMAccountName"
+
+  sAMAccountName="$1"
+
+  DUPLICATE="$(tail -100 "$LOG" | grep -c -E "^$NOW user.*sAMAccountName=$sAMAccountName lockoutTime")"
+
+  if [[ "$DUPLICATE" -ne 0 ]]
+  then
+    printf "\\n%s user=%s sAMAccountName=%s error=%0d " "$NOW" "$USR" "$sAMAccountName" 2
+    die "ALREADY PROCESS sAMAccountName=$1 IN LAST MINUTE"
+  fi
+
+}
+
+function config()
+{
+
+  [[ ! -e "$IPA_CONFIG" ]] && die "NOT FOUND FILE: $IPA_CONFIG"
+
+  eval $(sed '/:/!d;/^ *#/d;s/:/ /;' < "$IPA_CONFIG" | while read -r k v
+  do
+      str="$k='$v'"
+      echo "$str"
+  done)
+
+}
+
+function validate()
+{
+
+  [[ -z "$LOG"               ]] && cfg 'LOG'
+  [[ -z "$ERR"               ]] && cfg 'ERR'
+  [[ -z "$LDAP_HOST"         ]] && cfg 'LDAP_HOST'
+  [[ -z "$LDAP_USER"         ]] && cfg 'LDAP_USER'
+  [[ -z "$LDAP_PASS"         ]] && cfg 'LDAP_PASS'
+  [[ -z "$LDAP_DOMAIN"       ]] && cfg 'LDAP_DOMAIN'
+  [[ -z "$LDAP_SEARCH_BASE"  ]] && cfg 'LDAP_SEARCH_BASE'
+  [[ -z "$MAX_PWD_AGE"       ]] && cfg 'MAX_PWD_AGE'
+  [[ -z "$MAX_PWD_AGE"       ]] && MAX_PWD_AGE=30
+  [[ -z "$IPA_SSS_SYN_DEBUG" ]] || DEBUG="$IPA_SSS_SYN_DEBUG"
+  [[ -z "$IPA_SSS_SYN_SHOW"  ]] || SHOW="$IPA_SSS_SYN_SHOW"
+  [[ -z "$IPA_SSS_SYN_PIVOT" ]] || PIVOT="$IPA_SSS_SYN_PIVOT"
+
+  USERNAME="$sAMAccountName@$LDAP_DOMAIN"
+
+}
+
+function calculate()
+{
+
+  local SECONDS
+  local SEC_DFF
+
+  PWD_LST="$(echo "$AD_PWD" | cut -d' ' -f1)"
+  PWD_EXP="$(date -u -d "$PWD_LST  + $MAX_PWD_AGE days" +'%F')"
+  SEC_EXP="$(date -u -d "$PWD_EXP" +'%s')"
+  SECONDS="$(date -u -d 'now'      +'%s')"
+
+  SEC_DFF="$(( SEC_EXP - SECONDS ))"
+
+  [[ "$SEC_DFF" -ge 86400      ]] && PWD_DAY="$((SEC_DFF/3600/24))"
+  if [[ "$SEC_EXP" -le "$SECONDS" ]]
+  then
+    # pwdLastSet=0 and UAC<>DONT_EXPIRE must set pass at next logon
+    if [[ "$PWD_LST" = '1970-01-01' ]]
+    then
+      EXPIRED=0
+    else
+      EXPIRED=1
+    fi
+  fi
+
+  # accountExpires convert to EPOC and calculate Days to expire
+  AD_EEX="$(date -u -d "$AD_EXP" +'%s')"
+  AD_EDF="$((AD_SXP-START))"
+  AD_DAY="$((AD_EDF/86400))"
+
+  [[ "$AD_DAY" -lt 0            ]] && AD_DAY=0
+  [[ "$AD_EEX" -le "$START"     ]] && AD_DEX=1
+
+  # 0 = 1970-01-01 = NEVER EXPIRE
+  [[ "$AD_EXP" =~  1970-01-01.* ]] && AD_DEX=0
+
+}
+
+function outlog()
+{
+
+  OUT="$(log)"
+
+  if [[ "$SHOW" -eq 1 ]]
+  then
+    if [[ "$PIVOT" -eq 1 ]]
+    then
+      pivotlog
+    else
+      echo "$OUT"
+    fi
+  fi
+
+  echo "$OUT" >> "$LOG"
+
+}
+
+function main()
+{
+
+  defaults
+  params "$1"
+  config
+  validate
+  ad_search
+  calculate
+  ss_search
+  debug
+  expire
+  error
+  outlog
+
+  exit "$ERROR"
+
+}
+
+main "$1"
