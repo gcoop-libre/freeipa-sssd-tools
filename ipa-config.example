@@ -1,0 +1,16 @@
+# LDAP/AD
+LDAP_BIND_DN: OU=users,DC=addomain,DC=com
+LDAP_DOMAIN: addomain.com
+LDAP_HOST: 10.0.0.1:389
+LDAP_LDIF_WRAP: no
+LDAP_NET_TIMEOUT: 5
+LDAP_PASS: 53cr37
+LDAP_SCOPE: sub
+LDAP_SEARCH_BASE: OU=users,DC=addomain,DC=com
+LDAP_USER: admin@addomain.com
+# LDB
+IPA_DOMAIN: ipa.addomain.com
+LDB_FILTER: (objectCategory=user)
+LDB_HOST: /var/lib/sss/db/cache_ipa.addomain.com.ldb
+LOG_FILE: /opt/freeipa-sssd-tools/ipa-sss-sync.log
+MAX_PWD_AGE: 30
