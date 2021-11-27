@@ -32,8 +32,8 @@ Add to ``/root/.bashrc``:
 
 Use `gcoop-libre.freeipa_sssd_tools` from:
 
-- https://gitlab.com/gcoop-libre/ansible_freeipa_sssd_tools
-- https://github.com/gcoop-libre/ansible_freeipa_sssd_tools
+- https://gitlab.com/gcoop-libre/ansible_role_freeipa_sssd_tools
+- https://github.com/gcoop-libre/ansible_role_freeipa_sssd_tools
 
 ## `ipa-sss-syn` _IPA_ _SSSD_ Synchronize Cache
 
