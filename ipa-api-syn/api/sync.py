@@ -11,14 +11,17 @@ class Sync(Resource):
         ''' userid is sAMAccount '''
         sqlqry = "INSERT INTO accounts VALUES (?,?,?)"
         current_app.config.from_pyfile('config/settings.py')
-        logging.basicConfig(filename=current_app.config["LOGFILE"], filemode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-
+        logging.basicConfig(filename=current_app.config["LOGFILE"],
+                            filemode='w',
+                            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                            level=logging.INFO,
+                            datefmt='%Y-%m-%d %H:%M:%S')
         con = sqlite3.connect(current_app.config["DBINPUT"])
         cur = con.cursor()
         run = True
         retval = "Error"
         cnt = 1
-        logging.info("Processing account " + userid)
+        logging.info("op=sync acct="+userid+" status=synching")
         while run:
             random.seed(time.time())
             time.sleep(random.randint(1,1000)/1000)
@@ -29,8 +32,9 @@ class Sync(Resource):
                     cur.execute(sqlqry, row)
                     con.commit()
                     run = False
-                    logging.info(userid + " Queued")
+                    logging.info("op=sync acct="+userid+" status=queued")
             except sqlite3.OperationalError:
+                logging.warning("op=sync acct="+ userid+" status=SQLite3 Operational Error")
                 time.sleep(1)
         con.close()
         if not run:
