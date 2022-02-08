@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2021 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# shellcheck disable=SC1090
+
+DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` Split SynLog by date
+
+### Usage
+
+\`\`\`bash
+
+  $BIN [IPA_SSS_SYN_LOG] [YYYY-MM-DD]
+
+\`\`\`
+
+### Description
+
+Split \`ipa-sss-syn.log\` by date.
+
+### Examples
+
+Example split all days:
+
+\`\`\`bash
+
+  $BIN ipa-sss-syn.log
+
+      3866 2021-11-24-ipa-sss-syn.log
+      4060 2021-11-25-ipa-sss-syn.log
+      4041 2021-11-26-ipa-sss-syn.log
+      3865 2021-11-27-ipa-sss-syn.log
+      3865 2021-11-28-ipa-sss-syn.log
+      4424 2021-11-29-ipa-sss-syn.log
+      4088 2021-11-30-ipa-sss-syn.log
+
+\`\`\`
+
+Example split specific day:
+
+\`\`\`bash
+
+  $BIN ipa-sss-syn.log 2022-01-01
+
+      3861 2022-01-01-ipa-sss-syn.log
+
+\`\`\`
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+LOG='ipa-sss-syn.log'
+
+[[ -z "$1"   ]] || LOG="$1"
+[[ -e "$LOG" ]] || die "NOT FOUND LOG FILE $LOG"
+
+DATE_LST="$(mktemp)"
+
+if [[ -z "$2" ]]
+then
+  awk '{print $1}' "$LOG" | sort -u > "$DATE_LST"
+else
+  echo "$2"                         > "$DATE_LST"
+fi
+
+mkdir -p bak
+
+while read -r DATE _
+do
+
+  DATE_LOG="$DATE-$LOG"
+  DATE_BAK="bak/$DATE-$LOG.$(date +%s)"
+
+  [[ -e "$DATE_LOG" ]] && cp -f "$DATE_LOG" "$DATE_BAK"
+
+  grep -E "^$DATE " "$LOG" > "$DATE_LOG" && wc -l "$DATE_LOG"
+
+done < "$DATE_LST"
+
+rm -f "$DATE_LST"
