@@ -11,7 +11,7 @@ class Sync(Resource):
         ''' userid is sAMAccount '''
         sqlqry = "INSERT INTO accounts VALUES (?,?,?)"
         current_app.config.from_pyfile('config/settings.py')
-        logging.basicConfig(filename=current_app.config["LOGFILE"], filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+        logging.basicConfig(filename=current_app.config["LOGFILE"], filemode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
         con = sqlite3.connect(current_app.config["DBINPUT"])
         cur = con.cursor()
