@@ -12,7 +12,7 @@ class Query(Resource):
         current_app.config.from_pyfile('config/settings.py')
         logging.basicConfig(filename=current_app.config["LOGFILE"], 
                             filemode='w',
-                            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                            format='%(asctime)s - %(levelname)s - usr=%(name)s %(message)s',
                             level=logging.INFO,
                             datefmt='%Y-%m-%d %H:%M:%S')
         logging.info("op=qry acct="+userid+" status=recived")
