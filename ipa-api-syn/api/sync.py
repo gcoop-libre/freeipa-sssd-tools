@@ -45,6 +45,7 @@ class Sync(Resource):
                             'sAMAccount':row[2]
                             })
         else:
+            logging.error("op=sync acct="+userid+" status=could not queue account")
             return jsonify({'retval':retval,
                             'hash':"Error",
                             'time':"Error",
