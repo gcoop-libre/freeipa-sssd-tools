@@ -15,13 +15,13 @@ class Query(Resource):
                             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                             level=logging.INFO,
                             datefmt='%Y-%m-%d %H:%M:%S')
-        logging.info("op=qry acct=" + userid " status=recived")
+        logging.info("op=qry acct="+userid+" status=recived")
         with sqlite3.connect(current_app.config["DBPROCS"]) as con:
             cur = con.cursor()
             cur.execute(sqlqry)
             rec = cur.fetchone()
             if rec:
-                logging.info("op=qry acct=" + userid + " status=success")
+                logging.info("op=qry acct="+userid+" status=success")
                 return jsonify({'retval':"OK",
                                 'hash':rec[0],
                                 'timestamp':rec[1],
@@ -31,8 +31,8 @@ class Query(Resource):
                                 'result':rec[5]
                                 })
             else:
-                logging.warning("op=qry acct=" + userid + " status=account not found")
-                return jsonify('retval':"Error",
+                logging.warning("op=qry acct="+userid+" status=account not found")
+                return jsonify({'retval':"Error",
                                 'hash':"-",
                                 'timestamp':"-",
                                 'account':"-",
