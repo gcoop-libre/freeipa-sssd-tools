@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2022 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# shellcheck disable=SC1090
+# shellcheck disable=SC2035
+
+DIR_BIN=$(dirname "$0") && source "$DIR_BIN/ipa-src-cfg"
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` Check syntax using shellcheck
+
+### Usage
+
+\`\`\`bash
+
+  $BIN
+
+\`\`\`
+
+### Description
+
+Check syntax using shellcheck.
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+TMP="$(mktemp)"
+
+file --mime-type *     \
+  | grep shellscript   \
+  | tr -d ':'          \
+  | while read -r FILE _
+    do
+      shellcheck "$FILE" > "$TMP"
+      OK="$?"
+      SC="$(grep -Eo 'SC[0-9]+' "$TMP" | sort -u | tr '\n' ' ')"
+      printf "%s %s %s\n" "$OK" "$FILE" "$SC"
+    done \
+      | grep -v '^0'
+
+rm -f "$TMP"
