@@ -1,0 +1,197 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2021 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# shellcheck disable=SC1090
+# shellcheck disable=SC2129
+
+DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` Generate .dat file to plot SynLog
+
+### Usage
+
+\`\`\`bash
+
+  $BIN [IPA_SSS_SYN_LOG] [DATE]
+
+\`\`\`
+
+### Description
+
+Generate data file from \`ipa-sss-syn.log\` to generate plot
+
+### Examples
+
+\`\`\`bash
+
+	$BIN ipa-sss-syn.log
+
+	$BIN ipaai-2022-02-22-ipa-sss-syn.log 2022-02-22
+
+\`\`\`
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+DATE="$(date +%F)"
+
+[[ -z "$1" ]] && exit 1
+[[ -e "$1" ]] || die "NOT FOUND LOG FILE $1"
+[[ -z "$2" ]] || DATE="$2"
+
+LOG="$DATE-dat.log"
+SEC="$DATE-seconds.dat"
+
+SSY="$DATE-sync.dat"
+SNO="$DATE-no-sync.dat"
+
+TOT="$DATE-total.dat"
+
+# CRON
+SCR="$DATE-crn-syn.dat"
+SCW="$DATE-crn-syw.dat"
+NCR="$DATE-crn-nos.dat"
+NCW="$DATE-crn-now.dat"
+
+# IVR
+SIV="$DATE-ivr-syn.dat"
+SIW="$DATE-ivr-syw.dat"
+NIV="$DATE-ivr-nos.dat"
+NIW="$DATE-ivr-now.dat"
+
+# AID
+SAI="$DATE-aid-syn.dat"
+NAI="$DATE-aid-nos.dat"
+SAW="$DATE-aid-syw.dat"
+NAW="$DATE-aid-now.dat"
+
+# IPS
+TIM="$DATE-time.dat"
+
+SEP=' '
+
+grep -E "^$DATE" "$1" > "$LOG"
+
+# FIXME capture seconds=[0-9]+$
+awk -F "$SEP" '{print $2,$NF}'               "$LOG" | tr '=' ' ' | awk '{print $1,$3}' > "$SEC"
+awk -F "$SEP" '/sss_cache=1/ {print $2,$NF}' "$LOG" | tr '=' ' ' | awk '{print $1,$3}' > "$SSY"
+awk -F "$SEP" '/sss_cache=0/ {print $2,$NF}' "$LOG" | tr '=' ' ' | awk '{print $1,$3}' > "$SNO"
+
+# AID
+awk -F "$SEP" "/ipaai.*sss_cache=1/ {print \$2,\$NF}" "$LOG" | tr '=' ' ' | awk '{print $1,$3}' > "$SAI"
+awk -F "$SEP" "/ipaai.*sss_cache=0/ {print \$2,\$NF}" "$LOG" | tr '=' ' ' | awk '{print $1,$3}' > "$NAI"
+awk '($2 >= 20) {print $0}' "$SAI" > "$SAW"
+awk '($2 >= 20) {print $0}' "$NAI" > "$NAW"
+
+# IVR
+awk -F "$SEP" "/ipaivr.*sss_cache=1/ {print \$2,\$NF}" "$LOG" | tr '=' ' ' | awk '{print $1,$3}' > "$SIV"
+awk -F "$SEP" "/ipaivr.*sss_cache=0/ {print \$2,\$NF}" "$LOG" | tr '=' ' ' | awk '{print $1,$3}' > "$NIV"
+awk '($2 >= 20) {print $0}' "$SIV" > "$SIW"
+awk '($2 >= 20) {print $0}' "$NIV" > "$NIW"
+
+# CRN
+awk -F "$SEP" "/root.*sss_cache=1/ {print \$2,\$NF}" "$LOG" | tr '=' ' ' | awk '{print $1,$3}' > "$SCR"
+awk -F "$SEP" "/root.*sss_cache=0/ {print \$2,\$NF}" "$LOG" | tr '=' ' ' | awk '{print $1,$3}' > "$NCR"
+awk '($2 >= 20) {print $0}' "$SCR" > "$SCW"
+awk '($2 >= 20) {print $0}' "$NCR" > "$NCW"
+
+# IVR
+TOT_SIV="$(wc -l "$SIV" | awk '{print $1}')" # ivr cache=1
+TOT_NIV="$(wc -l "$NIV" | awk '{print $1}')" # ivr cache=0
+TOT_IVR="$((TOT_SIV+TOT_NIV))"
+
+TOT_SIW="$(wc -l "$SIW" | awk '{print $1}')" # ivr cache=1 >20s
+TOT_NIW="$(wc -l "$NIW" | awk '{print $1}')" # ivr cache=0 >20s
+TOT_IVW="$((TOT_SIW+TOT_NIW))"
+
+# AID
+TOT_SAI="$(wc -l "$SAI" | awk '{print $1}')" # aid cache=1
+TOT_NAI="$(wc -l "$NAI" | awk '{print $1}')" # aid cache=0
+TOT_AID="$((TOT_SAI+TOT_NAI))"
+
+TOT_SAW="$(wc -l "$SAW" | awk '{print $1}')" # aid cache=1 >20s
+TOT_NAW="$(wc -l "$NAW" | awk '{print $1}')" # aid cache=0 >20s
+TOT_AIW="$((TOT_SAW+TOT_NAW))"
+
+TOT_SCW="$(wc -l "$SCW" | awk '{print $1}')" # crn cache=1 >20s
+TOT_NCW="$(wc -l "$NCW" | awk '{print $1}')" # crn cache=0 >20s
+TOT_CRW="$((TOT_SCW+TOT_NCW))"
+
+# TOT
+TOT_IVR_AID="$((TOT_IVR+TOT_AID))"
+TOT_IVW_AIW="$((TOT_IVW+TOT_AIW))"
+
+OVW="$DATE-ovw.dat"
+
+true                         >  "$OVW"
+printf "%s " "$DATE"         >> "$OVW"
+
+printf "%s " "$TOT_SIV"      >> "$OVW" # ivr cache=1
+printf "%s " "$TOT_NIV"      >> "$OVW" # ivr cache=0
+printf "%s " "$TOT_IVR"      >> "$OVW" # ivr cache=0 + cache=1
+
+printf "%s " "$TOT_SIW"      >> "$OVW" # ivr cache=1 >20s
+printf "%s " "$TOT_NIW"      >> "$OVW" # ivr cache=0 >20s
+printf "%s " "$TOT_IVW"      >> "$OVW" # ivr cache=0 >20s + cache=1 >20s
+
+printf "%s " "$TOT_SAI"      >> "$OVW" # aid cache=1
+printf "%s " "$TOT_NAI"      >> "$OVW" # aid cache=0
+printf "%s " "$TOT_AID"      >> "$OVW" # aid cache=0 >20s
+
+printf "%s " "$TOT_SAW"      >> "$OVW" # aid cache=0 + cache=1
+printf "%s " "$TOT_NAW"      >> "$OVW" # aid cache=1 >20s
+printf "%s " "$TOT_AIW"      >> "$OVW" # aid cache=0 >20s + cache=1 >20s
+
+printf "%s " "$TOT_SCW"      >> "$OVW" # crn cache=0 + cache=1
+printf "%s " "$TOT_NCW"      >> "$OVW" # crn cache=1 >20s
+printf "%s " "$TOT_CRW"      >> "$OVW" # crn cache=0 >20s + cache=1 >20s
+
+printf "%s " "$TOT_IVR_AID"  >> "$OVW" # ivr + aid
+printf "%s " "$TOT_IVW_AIW"  >> "$OVW" # ivr + aid >20s
+
+awk '{print $1}' "$SEC" \
+  | sort \
+  | uniq -c \
+  | awk '{print $2,$1}' \
+  | sort > "$TOT"
+
+tail -1 "$TOT"
+
+awk '{print $2}' "$SEC" \
+  | sort > "$TIM"
+
+SRV="$DATE-srv.log"
+DD="${DATE//-/}"
+grep -E "^$DD" ipa-srv-mon.log | tr '_' ' ' > "$SRV"
+
+LDAP="$DATE-ldap.dat"
+LDAS="$DATE-ldas.dat"
+KRB5="$DATE-krb5.dat"
+AV01="$DATE-av01.dat"
+
+awk '{print $2, $3}'  "$SRV" | sed 's/389://g' > "$LDAP"
+awk '{print $2, $4}'  "$SRV" | sed 's/636://g' > "$LDAS"
+awk '{print $2, $5}'  "$SRV" | sed 's/88://g'  > "$KRB5"
+awk '{print $2, $13}' "$SRV" | tr -d ','       > "$AV01"
