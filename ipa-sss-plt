@@ -1,0 +1,225 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2021 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# shellcheck disable=SC1090
+# shellcheck disable=SC2001
+
+DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` Plot SynLog between hours range
+
+### Usage:
+
+\`\`\`bash
+
+  $BIN [YYYY-MM-DD] [X_START] [X_END]
+
+\`\`\`
+
+### Description
+
+Plot SynLog Stats:
+
+- LDAP Simultaneous Connections
+- KRB5 Simultaneous Connections
+- Average Host
+- Total SYNs
+- SYNs > 20s
+- SYNs < 20s
+- No-SYNs
+
+### Example:
+
+\`\`\`bash
+
+	$BIN 2022-01-01 07:00 19:00
+
+\`\`\`
+
+See full example output in [\`ipa-sss-plt.md\`](examples/ipa-sss-plt.md)
+and [\`ipa-sss-plt.pdf\`](examples/ipa-sss-plt.pdf)  
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+DATE="$(date +%F)"
+HOUR="$(date +'%k' | tr -d ' ')"
+NEXT="$((HOUR+1))"
+
+XSTART='00:00'
+XSTART='07:00'
+XEND="$NEXT:00"
+PP="1"
+
+[[ -z "$1" ]] || DATE="$1"
+[[ -z "$2" ]] || XSTART="$2"
+[[ -z "$3" ]] || XEND="$3"
+[[ -z "$4" ]] || PP="$4"
+
+[[ -e "$DATE-seconds.dat" ]] || exit 1
+[[ -e "$DATE-total.dat"   ]] || exit 1
+
+XS="${XSTART//:/}"
+XE="${XEND//:/}"
+
+SEC_PLT="$DATE-seconds-vs-total-vs-ips-$XS-$XE.plt"
+SEC_PNG="$DATE-seconds-vs-total-vs-ips-$XS-$XE.png"
+
+file2max()
+{
+  [[ -e "$1" ]] && exit
+  sort -nr -k2 "$1" | head -1 | cut -d ' ' -f2
+}
+
+file2labels()
+{
+
+  local MIN
+  local VAL
+  local COLOR
+  local PP=1
+  local XY='/1'
+  local ROTATE='center'
+
+  COLOR='#ffffff'
+
+  [[ -e "$1" ]] || return
+  [[ -z "$2" ]] || MIN="$2"
+  [[ -z "$3" ]] || COLOR="$3"
+  [[ -z "$4" ]] || PP="$4"
+  [[ -z "$5" ]] || XY="$5"
+  [[ -z "$6" ]] || ROTATE="$6"
+
+  LAST="${Y%%"."*}"
+
+DS="$(date -d "$XS" +%s)"
+DE="$(date -d "$XE" +%s)"
+
+while read -r X Y
+do
+
+  DX="$(date -d "$X" +%s)"
+
+  [[ "$DX" -lt "$DS" ]] && continue
+  [[ "$DX" -gt "$DE" ]] && continue
+
+  VAL="${Y%%"."*}"
+  VAL="$(echo "$VAL" | grep -Eo "[0-9\.]+")"
+  YY="$(echo "$Y" | grep -Eo '[0-9\.]+')"
+
+  [[ "$XY"      != '/1'     ]] && YY="$(echo "$Y$XY" | bc)"
+  [[ "$VAL"    -lt "$MIN"   ]] && continue
+
+  P="$(echo "$VAL*$PP" | bc)"
+  I="${P%%"."*}"
+  TMAX="$((LAST+I))"
+  TMIN="$((LAST-I))"
+  LAST="$VAL"
+
+LABEL=$(cat << EOF
+  set label sprintf(" %s",'$Y') at '$X',$YY+3 $ROTATE font "Inconsolata,10" textcolor rgb '$COLOR'
+EOF
+)
+
+  if [[ "$PP" = '1' ]]
+  then
+      echo "$LABEL" >> "$SEC_PLT"
+  else
+
+    if [[ "$VAL" -ge "$TMIN" ]]
+    then
+      if [[ "$VAL" -lt "$TMAX" ]]
+      then
+        echo "$LABEL" >> "$SEC_PLT"
+      fi
+    fi
+
+  fi
+
+done < "$1"
+
+}
+
+# FIXME ROUND + CEIL
+# FIXME MAX=$(file2max "$DATE-seconds.dat")
+
+HEAD=$(cat << EOF
+
+load '~/bin/osiux.plt'
+
+set key inside font 'Inconsolata,14' textcolor rgb '#ffffff'
+set xdata time;set timefmt '%H:%M';set format x '%H:%M'
+
+set xlabel "Time" font "Inconsolata,14" tc lt 5
+set ylabel "Seconds vs Total vs IPs/100" font "Inconsolata,14" tc lt 5
+
+set title "ipa-sss-syn\n$DATE | $XSTART - $XEND" font "Inconsolata,16" tc lt 5
+set key on
+
+set yrange [-10:100]
+set xrange ["$XSTART":"$XEND"]
+
+EOF
+)
+
+PLOT=$(cat << EOF
+
+plot '$DATE-crn-syw.dat' u 1:2          w p ls 30   pt 11 ps 2        ti 'ivr s20', \
+     '$DATE-crn-syn.dat' u 1:2          w p ls 30   pt 10 ps 2        ti 'ivr syn', \
+     '$DATE-crn-now.dat' u 1:2          w p ls 32   pt 11 ps 2        ti 'ivr n20', \
+     '$DATE-crn-nos.dat' u 1:2          w p ls 32   pt 10 ps 2        ti 'ivr nsy', \
+     '$DATE-ivr-syw.dat' u 1:2          w p ls 34   pt 11 ps 2        ti 'ivr s20', \
+     '$DATE-ivr-syn.dat' u 1:2          w p ls 34   pt 10 ps 2        ti 'ivr syn', \
+     '$DATE-ivr-now.dat' u 1:2          w p ls 36   pt 11 ps 2        ti 'ivr n20', \
+     '$DATE-ivr-nos.dat' u 1:2          w p ls 36   pt 10 ps 2        ti 'ivr nsy', \
+     '$DATE-aid-syw.dat' u 1:2          w p ls 38   pt 11 ps 2        ti 'aid s20', \
+     '$DATE-aid-syn.dat' u 1:2          w p ls 38   pt 10 ps 2        ti 'aid syn', \
+     '$DATE-aid-now.dat' u 1:2          w p ls 39   pt 11 ps 2        ti 'aid n20', \
+     '$DATE-aid-nos.dat' u 1:2          w p ls 39   pt 10 ps 2        ti 'aid nsy', \
+     '$DATE-total.dat'   u 1:2          w p ls 3    pt  6 ps 2         ti 'total syn', \
+     '$DATE-ldap.dat'    u 1:(\$2/100)  w l ls 20                      ti 'ldap', \
+     '$DATE-ldas.dat'    u 1:(\$2/100)  w l ls 21                      ti 'ldas', \
+     '$DATE-krb5.dat'    u 1:(\$2/100)  w l ls 22                      ti 'krb5', \
+     '$DATE-av01.dat'    u 1:(\$2*10)   w l ls 23                      ti 'avg01'
+EOF
+)
+
+echo "$HEAD" | sed 's/ \+$//g' > "$SEC_PLT"
+
+file2labels "$DATE-aid-syw.dat" 20 "#bc80bd" 1
+file2labels "$DATE-ivr-syw.dat" 20 "#80b1d3" 1
+file2labels "$DATE-av01.dat"     8 "#33a02c" 1     "*10"
+file2labels "$DATE-krb5.dat"  1900 "#b2df8a" "$PP" "/100"
+
+if [[ "$XEND" != '19:00' ]]
+then
+  file2labels "$DATE-ldap.dat"  1900 "#a6cee3" "$PP" "/100" "rotate left"
+fi
+
+file2labels "$DATE-total.dat"    5 "#0080ff" 1
+
+echo "$PLOT" | sed 's/ \+$//g' | sed 's/, /, \\\n/g'  >>"$SEC_PLT"
+
+gnuplot "$SEC_PLT" > "$SEC_PNG" && echo "$SEC_PNG"
