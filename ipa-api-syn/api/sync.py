@@ -39,8 +39,14 @@ class Sync(Resource):
         con.close()
         if not run:
             retval = "OK"
-        return jsonify({'retval':retval,
-                        'hash':row[0],
-                        'time':row[1],
-                        'sAMAccount':row[2]
-                        })
+            return jsonify({'retval':retval,
+                            'hash':row[0],
+                            'time':row[1],
+                            'sAMAccount':row[2]
+                            })
+        else:
+            return jsonify({'retval':retval,
+                            'hash':"Error",
+                            'time':"Error",
+                            'sAMAccount':userid
+                            })
