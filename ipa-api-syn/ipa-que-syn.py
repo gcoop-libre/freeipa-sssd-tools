@@ -46,11 +46,12 @@ while True:
 
        process = subprocess.Popen(script, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
        stdout, stderr = process.communicate()
+       rc = process.returncode
        if stdout != "":
            result = stdout
        else:
            result = stderr
-       logging.info("Sync script run with exit: "+result+"")
+       logging.info("op=quesyn acct=" + row_acct + " status=run_script  exit_code="+rc+" output="+result)
        with sqlite3.connect(db_processed) as con_proc:
           con_proc.execute(upd_acct_qry,(time.time(),stdout,row_hash))
           con_proc.commit()
