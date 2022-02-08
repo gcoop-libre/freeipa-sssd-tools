@@ -7,7 +7,7 @@ import logging
 import random
 
 class Query(Resource):
-    def get(self):
+    def get(self, userid):
         sqlqry = "SELECT * FROM accounts WHERE account=? ORDER BY timestamp"
         current_app.config.from_pyfile('config/settings.py')
         logging.basicConfig(filename=current_app.config["LOGFILE"], 
