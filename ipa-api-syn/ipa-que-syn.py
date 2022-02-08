@@ -23,8 +23,12 @@ db_processed = cfg["db_processed"]
 script = cfg["script"]
 consumer_log = cfg["consumer_logfile"]
 
-logging.basicConfig(filename=consumer_log, filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-logging.info("Starting to process sAMAccounts")
+logging.basicConfig(filename=consumer_log,
+                    filemode='w',
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO,
+                    datefmt='%Y-%m-%d %H:%M:%S')
+logging.info("op=quesyn status=started")
 while True:
    row_hash=""
    row_time=""
@@ -39,7 +43,7 @@ while True:
            row_acct = rec[2]
   
    if row_hash != "":
-       logging.info("Processing account " + row_acct)
+       logging.info("op=quesyn acct=" + row_acct + " status=processing")
        with sqlite3.connect(db_processed) as con_proc:
            con_proc.execute(ins_acct_qry,(row_hash,row_time,row_acct,time.time(),0,""))
            con_proc.commit()
@@ -64,4 +68,4 @@ while True:
                deleted = True
            if not deleted:
                time.sleep(2)
-       logging.info(row_acct + "Processing Finished")
+       logging.info("op=quesyn acct="+row_acct+" status=finished")
