@@ -18,7 +18,7 @@ class Query(Resource):
         logging.info("op=qry acct="+userid+" status=recived")
         with sqlite3.connect(current_app.config["DBPROCS"]) as con:
             cur = con.cursor()
-            cur.execute(sqlqry,userid)
+            cur.execute(sqlqry,(userid,))
             rec = cur.fetchone()
             if rec:
                 logging.info("op=qry acct="+userid+" status=success")
