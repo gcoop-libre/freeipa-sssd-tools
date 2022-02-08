@@ -1,0 +1,172 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2021 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# shellcheck disable=SC1090
+
+DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
+
+function usage()
+{
+cat << EOF
+ 
+## \`$BIN\` Plot summarized SynLog attribute stats
+
+### Usage
+ 
+\`\`\`bash
+
+  $BIN [LOG_ATTRIBUTE] [IPA_SSS_SYN_LOG] [YYY-MM-DD]
+
+\`\`\`
+
+### Description
+
+Plot log attribute stats.
+
+### Example
+
+\`\`\`bash
+
+	$BIN userAccountControl
+
+\`\`\`
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+LOG='ipa-sss-syn.log'
+#DATE='.*'
+
+[[ -z "$1"   ]] && die "EMPTY ATTRIBUTE"
+
+ATTR="$1"
+
+[[ -z "$2"   ]] || LOG="$2"
+[[ -e "$LOG" ]] || die "NOT FOUND LOG FILE $LOG"
+#[[ -z "$3"   ]] || DATE="$3"
+
+TOTAL="$(grep -c " $ATTR=" "$LOG")"
+
+[[ "$TOTAL" -eq 0 ]] && die "NOT FOUND ATTRIBUTE $ATTR IN $LOG"
+
+N="$(basename "$LOG" .log)"
+DAT="$N-$ATTR.dat"
+PLT="$N-$ATTR.plt"
+PNG="$N-$ATTR.png"
+
+TMP="$(mktemp)"
+COLS="$(mktemp)"
+TOTS="$(mktemp)"
+
+true > "$DAT"
+
+print_header()
+{
+
+grep -Eo " $ATTR=[0-9-]+" "$LOG" \
+  | grep -v '^$'                 \
+  | cut -d '=' -f2               \
+  | sort -u                      \
+  | sort -n                      > "$COLS"
+
+printf "%-10s %11s " 'date' 'total'
+while read -r COL
+do
+  printf "%11s " "$COL"
+done < "$COLS"
+printf "\\n"
+
+}
+
+sum_date()
+{
+
+grep -E "^$1" "$LOG"          \
+  | grep -v '^$'              \
+  | grep -Eo " $ATTR=[0-9-]+" \
+  | sort                      \
+  | cut -d '=' -f2            \
+  | uniq -c                   \
+  | sort -k 2                 > "$TOTS"
+
+S="$(awk 'BEGIN {S=0} {S+=$1} END {print S}' "$TOTS")"
+
+printf "%-10s %11s " "$1" "$S"
+while read -r COL
+do
+  T="$(awk "(\$2 == \"$COL\") {print \$1}" "$TOTS" | tr -d '\n')"
+  [[ -z "$T" ]] && T=0
+  P="$(echo "scale=2;$T/$S*100" | bc)"
+  printf "%11s " "$P"
+  #printf "%6s " "$T"
+
+done < "$COLS"
+printf "\\n"
+
+}
+
+print_header | tee -a "$DAT"
+
+awk '{print $1}' "$LOG" | sort -u | grep -v '^$' | while read -r D
+do
+  sum_date "$D"
+done | tee -a "$DAT"
+
+TCOLS="$(wc -l "$COLS" | awk '{print $1}')"
+
+PLOT=$(cat << EOF
+
+load '~/bin/osiux.plt'
+
+set title  "$ATTR\n$LOG" font 'Inconsolata,14' tc lt 5
+set xlabel "days"       font 'Inconsolata,10' tc lt 5
+set ylabel "total (%)"  font 'Inconsolata,10' tc lt 5
+set xtics tc ls 1
+set mxtics
+set ytics tc ls 1
+set  tics tc ls 1
+set mytics
+set border 1 front ls 1
+set tics nomirror out
+set lmargin 10
+set bmargin 5
+set rmargin 15
+set tmargin 5
+
+set style line 102 lc rgb '#c0c0c0' lt 0 lw 1
+set grid back ls 102
+set key outside font 'Inconsolata,14' textcolor rgb '#ffffff'
+
+set style data histograms
+set style histogram rowstacked
+set boxwidth 1 relative
+set style fill solid 1.0 border -1
+
+plot for [i=3:($TCOLS+2):1] '$DAT' u i:xticlabels(1) t columnheader
+
+EOF
+)
+
+echo "$PLOT" > "$PLT" && gnuplot "$PLT" > "$PNG"
+
+rm -f "$TMP"
+rm -f "$COLS"
+rm -f "$TOTS"
