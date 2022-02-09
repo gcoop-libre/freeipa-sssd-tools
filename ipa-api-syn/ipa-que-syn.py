@@ -48,6 +48,7 @@ while True:
            con_proc.execute(ins_acct_qry,(row_hash,row_time,row_acct,time.time(),0,""))
            con_proc.commit()
 
+       logging.info("op=quesyn acct=" + row_acct + " status=account_inserted")
        process = subprocess.Popen(script, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
        stdout, stderr = process.communicate()
        rc = process.returncode
@@ -60,12 +61,14 @@ while True:
           con_proc.execute(upd_acct_qry,(time.time(),stdout,row_hash))
           con_proc.commit()
 
+       logging.info("op=quesyn acct=" + row_acct + " status=exectime_updated")
        deleted = False
        while not deleted:
            with sqlite3.connect(db_input) as con_input:
                con_input.execute(del_acct_qry, (row_hash,))
                con_input.commit()
                deleted = True
+               logging.info("op=quesyn acct=" + row_acct + " status=del_inputdb")
            if not deleted:
                time.sleep(2)
        logging.info("op=quesyn acct="+row_acct+" status=finished")
