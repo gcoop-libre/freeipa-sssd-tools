@@ -56,7 +56,7 @@ while True:
            result = stdout
        else:
            result = stderr
-       logging.info("op=quesyn acct=" + row_acct + " status=run_script  exit_code="+rc+" output="+result)
+       logging.info("op=quesyn acct=" + row_acct + " status=run_script  exit_code="+str(rc)+" output="+result)
        with sqlite3.connect(db_processed) as con_proc:
           con_proc.execute(upd_acct_qry,(time.time(),stdout,row_hash))
           con_proc.commit()
