@@ -49,7 +49,7 @@ while True:
            con_proc.commit()
 
        logging.info("op=quesyn acct=" + row_acct + " status=account_inserted")
-       process = subprocess.Popen(script+" "+row_acct,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+       process = subprocess.Popen("IPA_SSS_SYN_SHOW=0 "+script+" "+row_acct,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
        stdout, stderr = process.communicate()
        rc = process.returncode
        if stdout != "":
