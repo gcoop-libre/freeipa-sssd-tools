@@ -9,7 +9,7 @@ import datetime
 
 class Query(Resource):
     def get(self, userid):
-        sqlqry = "SELECT * FROM accounts WHERE account=? ORDER BY timestamp"
+        sqlqry = "SELECT * FROM accounts WHERE account=? ORDER BY timestamp DESC"
         current_app.config.from_pyfile('config/settings.py')
         logging.basicConfig(filename=current_app.config["LOGFILE"], 
                             filemode='w',
