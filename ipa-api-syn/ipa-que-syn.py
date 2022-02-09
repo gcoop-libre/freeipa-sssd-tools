@@ -72,3 +72,4 @@ while True:
            if not deleted:
                time.sleep(2)
        logging.info("op=quesyn acct="+row_acct+" status=finished")
+       time.sleep(5)
