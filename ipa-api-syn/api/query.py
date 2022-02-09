@@ -5,6 +5,7 @@ import time
 import hashlib
 import logging
 import random
+import datetime
 
 class Query(Resource):
     def get(self, userid):
@@ -24,10 +25,10 @@ class Query(Resource):
                 logging.info("op=qry acct="+userid+" status=success")
                 return jsonify({'retval':"OK",
                                 'hash':rec[0],
-                                'timestamp':rec[1],
+                                'timestamp':datetime.datetime.fromtimestamp(rec[1]).strftime('%Y-%m-%d %H:%M:%S'),
                                 'account':rec[2],
-                                'dequeue_time':rec[3],
-                                'finish_time':rec[4],
+                                'dequeue_time':datetime.datetime.fromtimestamp(rec[3]).strftime('%Y-%m-%d %H:%M:%S'),
+                                'finish_time':datetime.datetime.fromtimestamp(rec[4]).strftime('%Y-%m-%d %H:%M:%S'),
                                 'result':rec[5]
                                 })
             else:
