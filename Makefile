@@ -1,8 +1,8 @@
 SHELL:=/bin/bash
 
-DAY  ?= $$(date +'%F')
-LOG  ?= ipa-sss-syn.log
-USR  ?= ipaai
+DAY    ?= $$(date +'%F')
+LOG    ?= ipa-sss-syn.log
+USR    ?= ipaai
 XSTART ?= 07:00
 XEND   ?= 19:00
 
