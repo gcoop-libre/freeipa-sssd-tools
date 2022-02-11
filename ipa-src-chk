@@ -39,6 +39,17 @@ cat << EOF
 
 Check syntax using shellcheck.
 
+### Examples
+
+\`\`\`bash
+
+  $BIN
+
+    1 ipa-sss-htm SC2034
+    1 ipa-sss-plt SC2034 SC2119 SC2120
+
+\`\`\`
+
 EOF
 exit 0
 }
