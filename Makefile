@@ -3,6 +3,8 @@ SHELL:=/bin/bash
 DAY  ?= $$(date +'%F')
 LOG  ?= ipa-sss-syn.log
 USR  ?= ipaai
+XSTART ?= 07:00
+XEND   ?= 19:00
 
 plt: log dat png
 
@@ -20,7 +22,7 @@ dat:
 	ipa-sss-dat $(USR)-$(DAY)-$(LOG) $(DAY)
 
 png:
-	ipa-sss-plt $(DAY)
+	ipa-sss-plt $(DAY) $(XSTART) $(XEND)
 
 hlp:
 	ipa-src-hlp >ipa-src-hlp.md
