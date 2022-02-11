@@ -73,8 +73,6 @@ fi
 
 rm -f "$TMP"
 
-echo "## FILTER $LOG ..."
-
 mkdir -p bak
 
 while read -r USR _
