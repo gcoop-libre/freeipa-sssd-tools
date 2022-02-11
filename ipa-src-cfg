@@ -53,6 +53,11 @@ function die()
   exit 1
 }
 
+function cfg()
+{
+  die "$EMPTY $1 TRY DEFINE IN $IPA_CONFIG"
+}
+
 markdown()
 {
 cat << EOF
