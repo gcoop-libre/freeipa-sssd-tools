@@ -7,34 +7,30 @@ classoption: landscape
 # `ipa src` commands
 
 
-## `ipa-src-cfg` Common functions and variables
+## `ipa-src-chk` Check syntax using shellcheck
 
 ### Usage
 
 ```bash
 
-  ipa-src-cfg
+  ipa-src-chk
 
 ```
 
 ### Description
 
-Common functions and variables for FreeIPA SSSD Tools scripts.
+Check syntax using shellcheck.
 
-
-## `ipa-src-hlp` Generate Markdown Help
-
-### Usage
+### Examples
 
 ```bash
 
-  ipa-src-hlp
+	ipa-src-chk
+
+		1 ipa-sss-htm SC2034 
+		1 ipa-sss-plt SC2034 SC2119 SC2120 
 
 ```
-
-### Description
-
-Generate a markdown output for usage of each command script.
 
 
 ## `ipa-src-tbl` Generate Markdown Table Overview
@@ -52,22 +48,106 @@ Generate a markdown output for usage of each command script.
 Generate a markdown table output for each command script.
 
 
-## `ipa-src-chk` Check syntax using shellcheck
+## `ipa-src-hlp` Generate Markdown Help
 
 ### Usage
 
 ```bash
 
-  ipa-src-chk
+  ipa-src-hlp
 
 ```
 
 ### Description
 
-Check syntax using shellcheck.
+Generate a markdown output for usage of each command script.
 
+
+## `ipa-src-cfg` Common functions and variables
+
+### Usage
+
+```bash
+
+  ipa-src-cfg
+
+```
+
+### Description
+
+Common functions and variables for FreeIPA SSSD Tools scripts.
+
+
+# `ipa srv` commands
+
+20220211_16:49 389:0 636:0 88:0 ALL:70 KDCP:0 DSRV:0 PKIU: LSOF:447637 AVG:0,73, 0,57, 0,50
 
 # `ipa sss` commands
+
+
+## `ipa-sss-htm` Generate HTML gallery of SynLog Plots Images
+
+### Usage
+
+```bash
+
+  ipa-sss-htm
+
+```
+
+### Description
+
+Generate HTML gallery of SynLog Plots Images
+
+
+## `ipa-sss-dat` Generate .dat file to plot SynLog
+
+### Usage
+
+```bash
+
+  ipa-sss-dat [IPA_SSS_SYN_LOG] [DATE]
+
+```
+
+### Description
+
+Generate data file from `ipa-sss-syn.log` to generate plot
+
+### Examples
+
+```bash
+
+	ipa-sss-dat ipa-sss-syn.log
+
+	ipa-sss-dat ipaai-2022-02-22-ipa-sss-syn.log 2022-02-22
+
+```
+
+
+## `ipa-sss-chk` Verify Syntax of SynLog
+
+### Usage
+
+```bash
+
+  ipa-sss-chk [IPA_SSS_SYN_LOG] [IPA_SSS_CHK_LOG]
+
+```
+
+### Description
+
+Verify syntax of `ipa-sss-syn.log`, output check in `ipa-sss-chk.log`
+
+### Examples
+
+```bash
+
+	ipa-sss-chk ipa-sss-syn.log
+
+	LINE=0000207 COLUMN=11 INVALID lastLogon= NOT MATCH lastLogon=2021-10-21
+
+```
 
 
 ## `ipa-sss-day` Split SynLog by date
@@ -144,7 +224,7 @@ Plot SynLog Stats:
 ```
 
 See full example output in [`ipa-sss-plt.md`](examples/ipa-sss-plt.md)
-and [`ipa-sss-plt.pdf`](examples/ipa-sss-plt.pdf)  
+and [`ipa-sss-plt.pdf`](examples/ipa-sss-plt.pdf)
 
 
 ## `ipa-sss-log` Generate report of SynLog
@@ -169,102 +249,6 @@ and [`ipa-sss-plt.pdf`](examples/ipa-sss-plt.pdf)
 
 See full example output in [ipa-sss-syn.md](examples/ipa-sss-syn.md) and
 [ipa-sss-syn.pdf](examples/ipa-sss-syn.pdf)
-
-
-## `ipa-sss-chk` Verify Syntax of SynLog
-
-### Usage
-
-```bash
-
-  ipa-sss-chk [IPA_SSS_SYN_LOG] [IPA_SSS_CHK_LOG]
-
-```
-
-### Description
-
-Verify syntax of `ipa-sss-syn.log`, output check in `ipa-sss-chk.log`
-
-### Examples
-
-```bash
-
-	ipa-sss-chk ipa-sss-syn.log
-
-	LINE=0000207 COLUMN=11 INVALID lastLogon= NOT MATCH lastLogon=2021-10-21
-
-```
-
-
-## `ipa-sss-usr` Split SynLog by user
-
-### Usage
-
-```bash
-
-  ipa-sss-usr [IPA_SSS_SYN_LOG] [YYY-MM-DD]
-
-```
-
-### Description
-
-Split `ipa-sss-syn.log` by user.
-
-### Examples
-
-```bash
-
-  ipa-sss-usr ipa-sss-syn.log root
-
-```
-
- 
-## `ipa-sss-sum` Plot summarized SynLog attribute stats
-
-### Usage
- 
-```bash
-
-  ipa-sss-sum [LOG_ATTRIBUTE] [IPA_SSS_SYN_LOG] [YYY-MM-DD]
-
-```
-
-### Description
-
-Plot log attribute stats.
-
-### Example
-
-```bash
-
-	ipa-sss-sum userAccountControl
-
-```
-
-
-## `ipa-sss-dat` Generate .dat file to plot SynLog
-
-### Usage
-
-```bash
-
-  ipa-sss-dat [IPA_SSS_SYN_LOG] [DATE]
-
-```
-
-### Description
-
-Generate data file from `ipa-sss-syn.log` to generate plot
-
-### Examples
-
-```bash
-
-	ipa-sss-dat ipa-sss-syn.log
-
-	ipa-sss-dat ipaai-2022-02-22-ipa-sss-syn.log 2022-02-22
-
-```
 
 
 ## `ipa-sss-syn` IPA SSSD Synchronize Cache
@@ -384,6 +368,52 @@ Generate data file from `ipa-sss-syn.log` to generate plot
   LDB_FILTER: (objectCategory=user)
   LDB_HOST: /var/lib/sss/db/cache_ipa.addomain.com.ldb
   MAX_PWD_AGE: 30
+
+```
+
+ 
+## `ipa-sss-sum` Plot summarized SynLog attribute stats
+
+### Usage
+ 
+```bash
+
+  ipa-sss-sum [LOG_ATTRIBUTE] [IPA_SSS_SYN_LOG] [YYY-MM-DD]
+
+```
+
+### Description
+
+Plot log attribute stats.
+
+### Example
+
+```bash
+
+	ipa-sss-sum userAccountControl
+
+```
+
+
+## `ipa-sss-usr` Split SynLog by user
+
+### Usage
+
+```bash
+
+  ipa-sss-usr [IPA_SSS_SYN_LOG] [YYY-MM-DD]
+
+```
+
+### Description
+
+Split `ipa-sss-syn.log` by user.
+
+### Examples
+
+```bash
+
+  ipa-sss-usr ipa-sss-syn.log root
 
 ```
 
