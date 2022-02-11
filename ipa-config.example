@@ -14,3 +14,10 @@ LDB_FILTER: (objectCategory=user)
 LDB_HOST: /var/lib/sss/db/cache_ipa.addomain.com.ldb
 LOG_FILE: /opt/freeipa-sssd-tools/ipa-sss-sync.log
 MAX_PWD_AGE: 30
+# HTM
+HTM_TITLE: FreeIPA SSSD Sync
+HTM_CSS: css/mini-default.css
+HTM_TOP: 14
+HTM_TPL: ipa-sss-htm.tpl
+HTM_INDEX: index.html
+HTM_DIR: /var/www/html/syn
