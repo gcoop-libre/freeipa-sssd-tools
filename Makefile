@@ -6,7 +6,7 @@ USR    ?= ipaai
 XSTART ?= 07:00
 XEND   ?= 19:00
 
-plt: log dat png
+plt: log dat png htm
 
 log:
 	ipa-sss-day $(LOG) $(DAY)
@@ -23,6 +23,9 @@ dat:
 
 png:
 	ipa-sss-plt $(DAY) $(XSTART) $(XEND)
+
+htm:
+	ipa-sss-htm
 
 hlp:
 	ipa-src-hlp >ipa-src-hlp.md
