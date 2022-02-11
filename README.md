@@ -13,6 +13,7 @@ Repository of useful scripts for _FreeIPA_ and _SSSD_.
 | `ipa-sss-chk` | Verify Syntax of SynLog                            |
 | `ipa-sss-dat` | Generate .dat file to plot SynLog                  |
 | `ipa-sss-day` | Split SynLog by date                               |
+| `ipa-sss-htm` | Generate HTML gallery of SynLog Plots Images       |
 | `ipa-sss-log` | Generate report of SynLog                          |
 | `ipa-sss-plt` | Plot SynLog between hours range                    |
 | `ipa-sss-sum` | Plot summarized SynLog attribute stats             |
