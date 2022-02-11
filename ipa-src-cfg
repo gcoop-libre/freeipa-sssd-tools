@@ -16,7 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# shellcheck disable=SC2046
+
 BIN="$(basename "$0")"
+IPA_CONFIG="$HOME/.ipa-config"
 
 function cfg_usage()
 {
@@ -79,4 +82,17 @@ title2()
 title3()
 {
   printf "\\n### %s\\n\\n" "$1"
+}
+
+function config()
+{
+
+  [[ ! -e "$IPA_CONFIG" ]] && die "NOT FOUND FILE: $IPA_CONFIG"
+
+  eval $(sed '/:/!d;/^ *#/d;s/:/ /;' < "$IPA_CONFIG" | while read -r k v
+  do
+      str="$k='$v'"
+      echo "$str"
+  done)
+
 }
