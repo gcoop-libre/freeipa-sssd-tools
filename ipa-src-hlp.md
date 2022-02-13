@@ -7,6 +7,21 @@ classoption: landscape
 # `ipa src` commands
 
 
+## `ipa-src-cfg` Common functions and variables
+
+### Usage
+
+```bash
+
+  ipa-src-cfg
+
+```
+
+### Description
+
+Common functions and variables for FreeIPA SSSD Tools scripts.
+
+
 ## `ipa-src-chk` Check syntax using shellcheck
 
 ### Usage
@@ -25,10 +40,10 @@ Check syntax using shellcheck.
 
 ```bash
 
-	ipa-src-chk
+  ipa-src-chk
 
-		1 ipa-sss-htm SC2034 
-		1 ipa-sss-plt SC2034 SC2119 SC2120 
+    1 ipa-sss-htm SC2034
+    1 ipa-sss-plt SC2034 SC2119 SC2120
 
 ```
 
@@ -63,41 +78,101 @@ Generate a markdown table output for each command script.
 Generate a markdown output for usage of each command script.
 
 
-## `ipa-src-cfg` Common functions and variables
+# `ipa srv` commands
 
-### Usage
+
+## `ipa-srv-mon` Capture metrics of IPA process
+
+### Usage:
 
 ```bash
 
-  ipa-src-cfg
+  ipa-srv-mon
 
 ```
 
 ### Description
 
-Common functions and variables for FreeIPA SSSD Tools scripts.
+Capture metrics of IPA process using pgrep, netstat and lsof
 
+- LDAP simultaneous connections (port 389)
+- LDAP SSL Simultaneous connections (port 636)
+- KRB5 simultaneous connections (port 88)
+- All TCP simultaneous connections
+- kdcproxy simultaneous process
+- dirsrv simultaneous process
+- pkiuser simultaneous process
+- simultaneous Open Files
+- Host Average
 
-# `ipa srv` commands
+### Example:
 
-20220211_16:49 389:0 636:0 88:0 ALL:70 KDCP:0 DSRV:0 PKIU: LSOF:447637 AVG:0,73, 0,57, 0,50
+```bash
+
+	ipa-srv-mon
+  2022-02-13_16:01 389:4 636:20 88:0 ALL:28 KDCP:2 DSRV:1 PKIU:1 LSOF:1807 AVG:average: 0,08, 0,08, 0,05
+
+```
+
 
 # `ipa sss` commands
 
 
-## `ipa-sss-htm` Generate HTML gallery of SynLog Plots Images
+## `ipa-sss-usr` Split SynLog by user
 
 ### Usage
 
 ```bash
 
-  ipa-sss-htm
+  ipa-sss-usr [IPA_SSS_SYN_LOG] [YYY-MM-DD]
 
 ```
 
 ### Description
 
-Generate HTML gallery of SynLog Plots Images
+Split `ipa-sss-syn.log` by user.
+
+### Examples
+
+```bash
+
+  ipa-sss-usr ipa-sss-syn.log root
+
+```
+
+
+## `ipa-sss-plt` Plot SynLog between hours range
+
+### Usage:
+
+```bash
+
+  ipa-sss-plt [YYYY-MM-DD] [X_START] [X_END]
+
+```
+
+### Description
+
+Plot SynLog Stats:
+
+- LDAP Simultaneous Connections
+- KRB5 Simultaneous Connections
+- Average Host
+- Total SYNs
+- SYNs > 20s
+- SYNs < 20s
+- No-SYNs
+
+### Example:
+
+```bash
+
+	ipa-sss-plt 2022-01-01 07:00 19:00
+
+```
+
+See full example output in [`ipa-sss-plt.md`](examples/ipa-sss-plt.md)
+and [`ipa-sss-plt.pdf`](examples/ipa-sss-plt.pdf)
 
 
 ## `ipa-sss-dat` Generate .dat file to plot SynLog
@@ -123,6 +198,21 @@ Generate data file from `ipa-sss-syn.log` to generate plot
 	ipa-sss-dat ipaai-2022-02-22-ipa-sss-syn.log 2022-02-22
 
 ```
+
+
+## `ipa-sss-htm` Generate HTML gallery of SynLog Plots Images
+
+### Usage
+
+```bash
+
+  ipa-sss-htm
+
+```
+
+### Description
+
+Generate HTML gallery of SynLog Plots Images
 
 
 ## `ipa-sss-chk` Verify Syntax of SynLog
@@ -191,40 +281,6 @@ Example split specific day:
       3861 2022-01-01-ipa-sss-syn.log
 
 ```
-
-
-## `ipa-sss-plt` Plot SynLog between hours range
-
-### Usage:
-
-```bash
-
-  ipa-sss-plt [YYYY-MM-DD] [X_START] [X_END]
-
-```
-
-### Description
-
-Plot SynLog Stats:
-
-- LDAP Simultaneous Connections
-- KRB5 Simultaneous Connections
-- Average Host
-- Total SYNs
-- SYNs > 20s
-- SYNs < 20s
-- No-SYNs
-
-### Example:
-
-```bash
-
-	ipa-sss-plt 2022-01-01 07:00 19:00
-
-```
-
-See full example output in [`ipa-sss-plt.md`](examples/ipa-sss-plt.md)
-and [`ipa-sss-plt.pdf`](examples/ipa-sss-plt.pdf)
 
 
 ## `ipa-sss-log` Generate report of SynLog
@@ -391,29 +447,6 @@ Plot log attribute stats.
 ```bash
 
 	ipa-sss-sum userAccountControl
-
-```
-
-
-## `ipa-sss-usr` Split SynLog by user
-
-### Usage
-
-```bash
-
-  ipa-sss-usr [IPA_SSS_SYN_LOG] [YYY-MM-DD]
-
-```
-
-### Description
-
-Split `ipa-sss-syn.log` by user.
-
-### Examples
-
-```bash
-
-  ipa-sss-usr ipa-sss-syn.log root
 
 ```
 
