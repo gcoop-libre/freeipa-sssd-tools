@@ -55,44 +55,95 @@ exit 0
 
 [[ "$1" =~ ^[-]+(h|help) ]] && usage
 
-DATE="$(date +%F)"
+function params()
+{
 
-[[ -z "$1" ]] && exit 1
-[[ -e "$1" ]] || die "NOT FOUND LOG FILE $1"
-[[ -z "$2" ]] || DATE="$2"
+  [[ -z "$1" ]] && die "EMPTY LOG FILE"
+  TMP="$1"
 
-LOG="$DATE-dat.log"
-SEC="$DATE-seconds.dat"
+  [[ -e "$1" ]] || die "NOT FOUND LOG FILE $TMP"
 
-SSY="$DATE-sync.dat"
-SNO="$DATE-no-sync.dat"
+  DATE="$(date +%F)"
+  [[ -z "$2" ]] || DATE="$2"
 
-TOT="$DATE-total.dat"
+}
+
+function validate()
+{
+
+	[[ -z "$IPA_SRV" ]] && cfg 'IPA_SRV'
+	[[ -z "$DIR_DAT" ]] && cfg 'DIR_DAT'
+	[[ -d "$DIR_DAT" ]] || die "NOT FOUND DIR $DIR_DAT"
+	[[ -e "$IPA_SRV" ]] || die "NOT FOUND FILE $IPA_SRV"
+
+}
+
+function filter()
+{
+
+  LOG="$DIR_DAT/$DATE-dat.log"
+  grep -E "^$DATE" "$TMP" > "$LOG"
+
+  SRV="$DIR_DAT/$DATE-srv.log"
+  DD="${DATE//-/}"
+  grep -E "^$DD" "$IPA_SRV" | tr '_' ' ' > "$SRV"
+
+}
+
+function defaults()
+{
+
+SEC="$DIR_DAT/$DATE-seconds.dat"
+
+SSY="$DIR_DAT/$DATE-sync.dat"
+SNO="$DIR_DAT/$DATE-no-sync.dat"
+
+TOT="$DIR_DAT/$DATE-total.dat"
 
 # CRON
-SCR="$DATE-crn-syn.dat"
-SCW="$DATE-crn-syw.dat"
-NCR="$DATE-crn-nos.dat"
-NCW="$DATE-crn-now.dat"
+SCR="$DIR_DAT/$DATE-crn-syn.dat"
+SCW="$DIR_DAT/$DATE-crn-syw.dat"
+NCR="$DIR_DAT/$DATE-crn-nos.dat"
+NCW="$DIR_DAT/$DATE-crn-now.dat"
 
 # IVR
-SIV="$DATE-ivr-syn.dat"
-SIW="$DATE-ivr-syw.dat"
-NIV="$DATE-ivr-nos.dat"
-NIW="$DATE-ivr-now.dat"
+SIV="$DIR_DAT/$DATE-ivr-syn.dat"
+SIW="$DIR_DAT/$DATE-ivr-syw.dat"
+NIV="$DIR_DAT/$DATE-ivr-nos.dat"
+NIW="$DIR_DAT/$DATE-ivr-now.dat"
 
 # AID
-SAI="$DATE-aid-syn.dat"
-NAI="$DATE-aid-nos.dat"
-SAW="$DATE-aid-syw.dat"
-NAW="$DATE-aid-now.dat"
+SAI="$DIR_DAT/$DATE-aid-syn.dat"
+NAI="$DIR_DAT/$DATE-aid-nos.dat"
+SAW="$DIR_DAT/$DATE-aid-syw.dat"
+NAW="$DIR_DAT/$DATE-aid-now.dat"
 
 # IPS
-TIM="$DATE-time.dat"
+TIM="$DIR_DAT/$DATE-time.dat"
 
 SEP=' '
 
-grep -E "^$DATE" "$1" > "$LOG"
+LDAP="$DIR_DAT/$DATE-ldap.dat"
+LDAS="$DIR_DAT/$DATE-ldas.dat"
+KRB5="$DIR_DAT/$DATE-krb5.dat"
+LSOF="$DIR_DAT/$DATE-lsof.dat"
+AV01="$DIR_DAT/$DATE-av01.dat"
+
+}
+
+function srv2dat()
+{
+
+  awk '{print $2, $3}'  "$SRV" | sed 's/389://g'  > "$LDAP"
+  awk '{print $2, $4}'  "$SRV" | sed 's/636://g'  > "$LDAS"
+  awk '{print $2, $5}'  "$SRV" | sed 's/88://g'   > "$KRB5"
+  awk '{print $2, $10}' "$SRV" | sed 's/LSOF://g' > "$LSOF"
+  awk '{print $2, $13}' "$SRV" | tr -d ','        > "$AV01"
+
+}
+
+function log2dat()
+{
 
 # FIXME capture seconds=[0-9]+$
 awk -F "$SEP" '{print $2,$NF}'               "$LOG" | tr '=' ' ' | awk '{print $1,$3}' > "$SEC"
@@ -116,6 +167,11 @@ awk -F "$SEP" "/root.*sss_cache=1/ {print \$2,\$NF}" "$LOG" | tr '=' ' ' | awk '
 awk -F "$SEP" "/root.*sss_cache=0/ {print \$2,\$NF}" "$LOG" | tr '=' ' ' | awk '{print $1,$3}' > "$NCR"
 awk '($2 >= 20) {print $0}' "$SCR" > "$SCW"
 awk '($2 >= 20) {print $0}' "$NCR" > "$NCW"
+
+}
+
+function totals()
+{
 
 # IVR
 TOT_SIV="$(wc -l "$SIV" | awk '{print $1}')" # ivr cache=1
@@ -177,21 +233,21 @@ awk '{print $1}' "$SEC" \
   | awk '{print $2,$1}' \
   | sort > "$TOT"
 
-tail -1 "$TOT"
-
 awk '{print $2}' "$SEC" \
   | sort > "$TIM"
 
-SRV="$DATE-srv.log"
-DD="${DATE//-/}"
-grep -E "^$DD" ipa-srv-mon.log | tr '_' ' ' > "$SRV"
+}
 
-LDAP="$DATE-ldap.dat"
-LDAS="$DATE-ldas.dat"
-KRB5="$DATE-krb5.dat"
-AV01="$DATE-av01.dat"
+function main()
+{
+  config
+  params "$@"
+  validate
+  filter
+  defaults
+  srv2dat
+  log2dat
+  totals
+}
 
-awk '{print $2, $3}'  "$SRV" | sed 's/389://g' > "$LDAP"
-awk '{print $2, $4}'  "$SRV" | sed 's/636://g' > "$LDAS"
-awk '{print $2, $5}'  "$SRV" | sed 's/88://g'  > "$KRB5"
-awk '{print $2, $13}' "$SRV" | tr -d ','       > "$AV01"
+main "$@"
