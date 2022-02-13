@@ -36,3 +36,5 @@ HTM_TOP: 14
 HTM_TPL: ipa-sss-htm.tpl
 HTM_INDEX: index.html
 HTM_DIR: /var/www/html/syn
+# MON
+MON_DATE: %F_%H:%M
