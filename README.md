@@ -10,6 +10,7 @@ Repository of useful scripts for _FreeIPA_ and _SSSD_.
 | `ipa-src-chk` | Check syntax using shellcheck                      |
 | `ipa-src-hlp` | Generate Markdown Help                             |
 | `ipa-src-tbl` | Generate Markdown Table Overview                   |
+| `ipa-srv-mon` | Capture metrics of IPA process                     |
 | `ipa-sss-chk` | Verify Syntax of SynLog                            |
 | `ipa-sss-dat` | Generate .dat file to plot SynLog                  |
 | `ipa-sss-day` | Split SynLog by date                               |
