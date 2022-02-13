@@ -56,7 +56,7 @@ Plot SynLog Stats:
 \`\`\`
 
 See full example output in [\`ipa-sss-plt.md\`](examples/ipa-sss-plt.md)
-and [\`ipa-sss-plt.pdf\`](examples/ipa-sss-plt.pdf)  
+and [\`ipa-sss-plt.pdf\`](examples/ipa-sss-plt.pdf)
 
 EOF
 exit 0
@@ -64,28 +64,58 @@ exit 0
 
 [[ "$1" =~ ^[-]+(h|help) ]] && usage
 
-DATE="$(date +%F)"
-HOUR="$(date +'%k' | tr -d ' ')"
-NEXT="$((HOUR+1))"
+function defaults()
+{
+	DATE="$(date +%F)"
+	HOUR="$(date +'%k' | tr -d ' ')"
+	NEXT="$((HOUR+1))"
 
-XSTART='00:00'
-XSTART='07:00'
-XEND="$NEXT:00"
-PP="1"
+	XSTART='00:00'
+	XSTART='07:00'
+	XEND="$NEXT:00"
+	PP="1"
+}
 
-[[ -z "$1" ]] || DATE="$1"
-[[ -z "$2" ]] || XSTART="$2"
-[[ -z "$3" ]] || XEND="$3"
-[[ -z "$4" ]] || PP="$4"
+function params()
+{
 
-[[ -e "$DATE-seconds.dat" ]] || exit 1
-[[ -e "$DATE-total.dat"   ]] || exit 1
+	[[ -z "$1" ]] || DATE="$1"
+	[[ -z "$2" ]] || XSTART="$2"
+	[[ -z "$3" ]] || XEND="$3"
+	[[ -z "$4" ]] || PP="$4"
 
-XS="${XSTART//:/}"
-XE="${XEND//:/}"
+	XS="${XSTART//:/}"
+	XE="${XEND//:/}"
 
-SEC_PLT="$DATE-seconds-vs-total-vs-ips-$XS-$XE.plt"
-SEC_PNG="$DATE-seconds-vs-total-vs-ips-$XS-$XE.png"
+	SEC_PLT="$DIR_PLT/$DATE-seconds-vs-total-vs-ips-$XS-$XE.plt"
+	SEC_PNG="$DIR_PNG/$DATE-seconds-vs-total-vs-ips-$XS-$XE.png"
+  SEC_ERR="$DIR_PLT/$DATE-seconds-vs-total-vs-ips-$XS-$XE.err"
+  SEC_DAT="$DIR_DAT/$DATE-seconds.dat"
+  SEC_TOT="$DIR_DAT/$DATE-total.dat"
+
+}
+
+function validate()
+{
+
+	[[ -z "$PLT_KEY_COLOR"    ]] && cfg 'PLT_KEY_COLOR'
+	[[ -z "$PLT_KEY_FONT"     ]] && cfg 'PLT_KEY_FONT'
+	[[ -z "$PLT_TITLE"        ]] && cfg 'PLT_TITLE'
+	[[ -z "$PLT_TITLE_FONT"   ]] && cfg 'PLT_TITLE_FONT'
+	[[ -z "$PLT_TITLE_LT"     ]] && cfg 'PLT_TITLE_LT'
+	[[ -z "$PLT_X_FONT"       ]] && cfg 'PLT_X_FONT'
+	[[ -z "$PLT_X_LABEL"      ]] && cfg 'PLT_X_LABEL'
+	[[ -z "$PLT_Y_FONT"       ]] && cfg 'PLT_Y_FONT'
+	[[ -z "$PLT_Y_LABEL"      ]] && cfg 'PLT_Y_LABEL'
+  [[ -z "$DIR_PLT"          ]] && cfg 'IPA_PLT'
+  [[ -z "$DIR_PNG"          ]] && cfg 'IPA_PNG'
+  [[ -z "$IPA_PLT"          ]] && cfg 'IPA_PLT'
+
+	[[ -e "$SEC_DAT"          ]] || die "NOT FOUND FILE $SEC_DAT"
+	[[ -e "$SEC_TOT"          ]] || die "NOT FOUND FILE $SEC_TOT"
+  [[ -d "$DIR_PLT"          ]] || die "NOT FOUND DIR $DIR_PLT"
+  [[ -d "$DIR_PNG"          ]] || die "NOT FOUND DIR $DIR_PNG"
+}
 
 file2max()
 {
@@ -162,20 +192,23 @@ done < "$1"
 
 }
 
+function plot()
+{
+
 # FIXME ROUND + CEIL
 # FIXME MAX=$(file2max "$DATE-seconds.dat")
 
 HEAD=$(cat << EOF
 
-load '~/bin/osiux.plt'
+load '$IPA_PLT'
 
-set key inside font 'Inconsolata,14' textcolor rgb '#ffffff'
+set key inside font '$PLT_KEY_FONT' textcolor rgb '#$PLT_KEY_COLOR'
 set xdata time;set timefmt '%H:%M';set format x '%H:%M'
 
-set xlabel "Time" font "Inconsolata,14" tc lt 5
-set ylabel "Seconds vs Total vs IPs/100" font "Inconsolata,14" tc lt 5
+set xlabel "$PLT_X_LABEL" font "$PLT_X_FONT" tc lt 5
+set ylabel "$PLT_Y_LABEL" font "$PLT_Y_FONT" tc lt 5
 
-set title "ipa-sss-syn\n$DATE | $XSTART - $XEND" font "Inconsolata,16" tc lt 5
+set title "$PLT_TITLE\n$DATE | $XSTART - $XEND" font "$PLT_TITLE_FONT" tc lt $PLT_TITLE_LT
 set key on
 
 set yrange [-10:100]
@@ -186,40 +219,56 @@ EOF
 
 PLOT=$(cat << EOF
 
-plot '$DATE-crn-syw.dat' u 1:2          w p ls 30   pt 11 ps 2        ti 'ivr s20', \
-     '$DATE-crn-syn.dat' u 1:2          w p ls 30   pt 10 ps 2        ti 'ivr syn', \
-     '$DATE-crn-now.dat' u 1:2          w p ls 32   pt 11 ps 2        ti 'ivr n20', \
-     '$DATE-crn-nos.dat' u 1:2          w p ls 32   pt 10 ps 2        ti 'ivr nsy', \
-     '$DATE-ivr-syw.dat' u 1:2          w p ls 34   pt 11 ps 2        ti 'ivr s20', \
-     '$DATE-ivr-syn.dat' u 1:2          w p ls 34   pt 10 ps 2        ti 'ivr syn', \
-     '$DATE-ivr-now.dat' u 1:2          w p ls 36   pt 11 ps 2        ti 'ivr n20', \
-     '$DATE-ivr-nos.dat' u 1:2          w p ls 36   pt 10 ps 2        ti 'ivr nsy', \
-     '$DATE-aid-syw.dat' u 1:2          w p ls 38   pt 11 ps 2        ti 'aid s20', \
-     '$DATE-aid-syn.dat' u 1:2          w p ls 38   pt 10 ps 2        ti 'aid syn', \
-     '$DATE-aid-now.dat' u 1:2          w p ls 39   pt 11 ps 2        ti 'aid n20', \
-     '$DATE-aid-nos.dat' u 1:2          w p ls 39   pt 10 ps 2        ti 'aid nsy', \
-     '$DATE-total.dat'   u 1:2          w p ls 3    pt  6 ps 2         ti 'total syn', \
-     '$DATE-ldap.dat'    u 1:(\$2/100)  w l ls 20                      ti 'ldap', \
-     '$DATE-ldas.dat'    u 1:(\$2/100)  w l ls 21                      ti 'ldas', \
-     '$DATE-krb5.dat'    u 1:(\$2/100)  w l ls 22                      ti 'krb5', \
-     '$DATE-av01.dat'    u 1:(\$2*10)   w l ls 23                      ti 'avg01'
+plot '$DIR_DAT/$DATE-crn-syw.dat' u 1:2          w p ls 30   pt 11 ps 2        ti 'crn s20', \
+     '$DIR_DAT/$DATE-crn-syn.dat' u 1:2          w p ls 30   pt 10 ps 2        ti 'crn syn', \
+     '$DIR_DAT/$DATE-crn-now.dat' u 1:2          w p ls 32   pt 11 ps 2        ti 'crn n20', \
+     '$DIR_DAT/$DATE-crn-nos.dat' u 1:2          w p ls 32   pt 10 ps 2        ti 'crn nsy', \
+     '$DIR_DAT/$DATE-ivr-syw.dat' u 1:2          w p ls 34   pt 11 ps 2        ti 'ivr s20', \
+     '$DIR_DAT/$DATE-ivr-syn.dat' u 1:2          w p ls 34   pt 10 ps 2        ti 'ivr syn', \
+     '$DIR_DAT/$DATE-ivr-now.dat' u 1:2          w p ls 36   pt 11 ps 2        ti 'ivr n20', \
+     '$DIR_DAT/$DATE-ivr-nos.dat' u 1:2          w p ls 36   pt 10 ps 2        ti 'ivr nsy', \
+     '$DIR_DAT/$DATE-aid-syw.dat' u 1:2          w p ls 38   pt 11 ps 2        ti 'aid s20', \
+     '$DIR_DAT/$DATE-aid-syn.dat' u 1:2          w p ls 38   pt 10 ps 2        ti 'aid syn', \
+     '$DIR_DAT/$DATE-aid-now.dat' u 1:2          w p ls 39   pt 11 ps 2        ti 'aid n20', \
+     '$DIR_DAT/$DATE-aid-nos.dat' u 1:2          w p ls 39   pt 10 ps 2        ti 'aid nsy', \
+     '$DIR_DAT/$DATE-total.dat'   u 1:2          w p ls 3    pt  6 ps 2         ti 'total syn', \
+     '$DIR_DAT/$DATE-ldap.dat'    u 1:(\$2/100)  w l ls 20                      ti 'ldap', \
+     '$DIR_DAT/$DATE-ldas.dat'    u 1:(\$2/100)  w l ls 21                      ti 'ldas', \
+     '$DIR_DAT/$DATE-krb5.dat'    u 1:(\$2/100)  w l ls 22                      ti 'krb5', \
+     '$DIR_DAT/$DATE-av01.dat'    u 1:(\$2*10)   w l ls 23                      ti 'avg1', \
+     '$DIR_DAT/$DATE-lsof.dat'    u 1:(\$2/10000) w l ls 24                     ti 'lsof'
 EOF
 )
 
 echo "$HEAD" | sed 's/ \+$//g' > "$SEC_PLT"
 
-file2labels "$DATE-aid-syw.dat" 20 "#bc80bd" 1
-file2labels "$DATE-ivr-syw.dat" 20 "#80b1d3" 1
-file2labels "$DATE-av01.dat"     8 "#33a02c" 1     "*10"
-file2labels "$DATE-krb5.dat"  1900 "#b2df8a" "$PP" "/100"
+file2labels "$DIR_DAT/$DATE-aid-syw.dat" 20 "#bc80bd" 1
+file2labels "$DIR_DAT/$DATE-ivr-syw.dat" 20 "#80b1d3" 1
+file2labels "$DIR_DAT/$DATE-av01.dat"     8 "#33a02c" 1     "*10"
+file2labels "$DIR_DAT/$DATE-krb5.dat"  1900 "#b2df8a" "$PP" "/100"
 
 if [[ "$XEND" != '19:00' ]]
 then
-  file2labels "$DATE-ldap.dat"  1900 "#a6cee3" "$PP" "/100" "rotate left"
+  file2labels "$DIR_DAT/$DATE-ldap.dat"  1900 "#a6cee3" "$PP" "/100" "rotate left"
 fi
 
-file2labels "$DATE-total.dat"    5 "#0080ff" 1
+file2labels "$DIR_DAT/$DATE-total.dat"    5 "#0080ff" 1
 
 echo "$PLOT" | sed 's/ \+$//g' | sed 's/, /, \\\n/g'  >>"$SEC_PLT"
 
-gnuplot "$SEC_PLT" > "$SEC_PNG" && echo "$SEC_PNG"
+gnuplot "$SEC_PLT" > "$SEC_PNG" 2>"$SEC_ERR" && echo "$SEC_PNG"
+
+}
+
+function main()
+{
+
+  config
+  defaults
+  params "$@"
+  validate
+  plot
+
+}
+
+main "$@"
