@@ -33,8 +33,8 @@ class Sync(Resource):
                     con.commit()
                     run = False
                     logging.info("op=sync acct="+userid+" status=queued")
-            except sqlite3.OperationalError:
-                logging.warning("op=sync acct="+ userid+" status=SQLite3 Operational Error")
+            except sqlite3.OperationalError, e:
+                logging.warning("op=sync acct="+ userid+" status=SQLite3 Operational Error msg=%s", e)
                 time.sleep(1)
         con.close()
         if not run:
