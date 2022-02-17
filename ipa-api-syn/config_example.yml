@@ -3,5 +3,6 @@
 db_input: "/var/lib/ipa-api-syn/tosync.db"
 db_processed: "/var/lib/ipa-api-syn/process.db"
 script: "/opt/scripts/target_script.sh"
+escpriv: true
 consumer_logfile: "/var/log/ipa-que-syn.log"
 api_logfile: "/var/log/ipa-api.log"
