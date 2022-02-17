@@ -14,6 +14,10 @@ del_acct_qry = "DELETE FROM accounts WHERE hash=?"
 ins_acct_qry = "INSERT INTO accounts(hash,timestamp,account,dequeue_time,finish_time,return) VALUES(?,?,?,?,?,?)"
 upd_acct_qry = "UPDATE accounts SET finish_time=?, return=? WHERE hash=?" 
 
+if len(sys.argv) < 2:
+    print("Configuration file required.")
+    os._exit(1)
+
 conffile = sys.argv[1]
 with open(conffile, "r") as f:
     cfg = yaml.load(f, Loader=Loader)
