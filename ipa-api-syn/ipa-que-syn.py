@@ -55,11 +55,7 @@ while True:
        process = subprocess.Popen("IPA_SSS_SYN_SHOW=0 "+script+" "+row_acct,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
        stdout, stderr = process.communicate()
        rc = process.returncode
-       if stdout != "":
-           result = stdout
-       else:
-           result = stderr
-       logging.info("op=quesyn acct=" + row_acct + " status=run_script  exit_code="+str(rc)+" output="+result)
+       logging.info("op=quesyn acct=" + row_acct + " status=run_script  exit_code="+str(rc)+" stdout="+stdout+" stderr="+stderr)
        with sqlite3.connect(db_processed) as con_proc:
           con_proc.execute(upd_acct_qry,(time.time(),stdout,row_hash))
           con_proc.commit()
