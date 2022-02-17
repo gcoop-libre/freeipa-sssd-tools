@@ -21,6 +21,7 @@ with open(conffile, "r") as f:
 db_input = cfg["db_input"]
 db_processed = cfg["db_processed"]
 script = cfg["script"]
+escpriv = cfg["escpriv"]
 consumer_log = cfg["consumer_logfile"]
 
 logging.basicConfig(filename=consumer_log,
