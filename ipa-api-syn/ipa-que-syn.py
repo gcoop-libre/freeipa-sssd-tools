@@ -16,6 +16,7 @@ upd_acct_qry = "UPDATE accounts SET finish_time=?, return=? WHERE hash=?"
 
 if len(sys.argv) < 2:
     print("Configuration file required.")
+    print("example: ipa-que-syn.py /path/to/configuration/file")
     os._exit(1)
 
 conffile = sys.argv[1]
