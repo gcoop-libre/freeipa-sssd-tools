@@ -1,0 +1,320 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2021 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# shellcheck disable=SC1090
+# shellcheck disable=SC2002
+
+DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` show attributes differences between sync requests from log
+
+### Usage:
+
+\`\`\`bash
+
+  $BIN [IPA_SSS_SYN_LOG]
+
+\`\`\`
+
+### Description
+
+Show attributes differences between user sync requests from log
+
+Attributes list:
+
+\`\`\`
+
+	user
+	sAMAccountName
+	lockoutTime
+	pwdLastSet
+	pwdExpireDate
+	pwdExpireDays
+	pwdExpired
+	physicalDeliveryOfficeName
+	lastLogon
+	userAccountControl
+	adUserAccountControl
+	accountExpires
+	accountExpireDays
+	accountExpired
+	adAccountExpires
+	dataExpireTimestamp
+	sss_cache
+	newDataExpireTimestamp
+	newAdUserAccountControl
+	newAdAccountExpires
+	error
+	seconds
+
+\`\`\`
+
+### Example:
+
+\`\`\`bash
+
+	$BIN
+
+\`\`\`
+
+See full example output in [\`ipa-sss-dff.md\`](examples/ipa-sss-dff.md)
+and [\`ipa-sss-dff.pdf\`](examples/ipa-sss-dff.pdf)
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+function defaults()
+{
+
+NOW="$(date +%F)"
+LOG='ipa-sss-syn.log'
+
+ATTR="$(cat << EOF
+user
+sAMAccountName
+lockoutTime
+pwdLastSet
+pwdExpireDate
+pwdExpireDays
+pwdExpired
+physicalDeliveryOfficeName
+lastLogon
+userAccountControl
+adUserAccountControl
+accountExpires
+accountExpireDays
+accountExpired
+adAccountExpires
+dataExpireTimestamp
+sss_cache
+newDataExpireTimestamp
+newAdUserAccountControl
+newAdAccountExpires
+error
+seconds
+EOF
+)"
+
+}
+
+function params()
+{
+
+  [[ -z "$1"   ]] || LOG="$1"
+  [[ -e "$LOG" ]] || die "NOT FOUND FILE $LOG"
+
+  NAME="$(basename "$LOG" .log)"
+  OUT="${DIR_PDF}/${NAME}.md"
+  [[ -z "$2"   ]] || OUT="$2"
+
+  ATTRS="$(mktemp)"
+  echo "$ATTR" > "$ATTRS"
+
+}
+
+function validate()
+{
+
+  [[ -z "$DIR_TMP" ]] && cfg "DIR_TMP"
+  [[ -d "$DIR_TMP" ]] || die "NOT FOUND DIRECTORY $DIR_TMP"
+  [[ -z "$DIR_PDF" ]] && cfg "DIR_PDF"
+  [[ -d "$DIR_PDF" ]] || die "NOT FOUND DIRECTORY $DIR_PDF"
+
+}
+
+function header()
+{
+
+TITLE="diff attributes $LOG"
+
+cat << EOF
+---
+date: $NOW
+title: $TITLE
+author: CC-BY-SA Osiris Alejandro Gomez osiris@gcoop.coop
+fontsize: 8pt
+classoption: landscape
+---
+EOF
+
+}
+
+function clean_dir_file()
+{
+
+  find "$1" -type f -iname "$2" -exec rm -f {} \;
+
+}
+
+function split_ipa()
+{
+
+  split -d -l 6 "$TMP" "$DIR_TMP/ipasplit"
+
+}
+
+function get_value()
+{
+
+  grep -wE "^$1" "$2" | head -1 | awk '{print $2}'
+
+}
+
+function pagebreak()
+{
+
+  printf "\\n%s\\n" '\pagebreak'
+
+}
+
+function log2diff()
+{
+
+TMP="$(mktemp)"
+USR="$(mktemp)"
+
+grep -Eo 'sAMAccountName=[0-9a-z]+' "$LOG" \
+  | sort -u \
+  | cut -d '=' -f2 > "$USR"
+
+while read -r U
+do
+
+  grep "$U" "$LOG" | while read -r L
+  do
+
+    DT="$(echo "$L" | cut -d ' ' -f-2 | tr -d '-' | tr ' ' '-' | tr -d ':')"
+    F="$DIR_TMP/$U-$DT.ipa"
+    echo "$L" | tr ' ' '\n' | tr '=' ' ' | align2col > "$F"
+
+  done
+
+  find "$DIR_TMP" -maxdepth 1 -type f -iname "$U-*.ipa" \
+    | rev                                               \
+    | cut -d '/' -f1                                    \
+    | rev                                               \
+    | sort > "$TMP"
+
+  clean_dir_file "$DIR_TMP" 'ipasplit*'
+  split_ipa
+
+  find "$DIR_TMP" -maxdepth 1 -type f -iname "ipasplit*" \
+    | sort \
+    | while read -r SPLIT
+  do
+
+    printf "\\n## \`%s\`\\n\\n" "$U"
+    printf "| \`%-26s\` " "ATTR"
+
+    while read -r F
+    do
+      D="$(echo "$F" | cut -d '-' -f3 | cut -d '.'  -f1)"
+      TT="$(echo "$F" | cut -d '-' -f2)"
+      DD="$(date -d "$TT" +'%F')"
+      HH="$(echo "$D" | cut -c -2)"
+      MM="$(echo "$D" | cut -c 3-)"
+      printf "| \`%20s\` " "$DD $HH:$MM"
+    done < "$SPLIT"
+
+    printf "|\\n"
+
+    printf "|------------------------------"
+    while read -r F
+    do
+      printf "|------------------------"
+    done < "$SPLIT"
+    printf "|\\n"
+
+    LAST='START'
+
+    cat "$ATTRS" | while read -r A
+    do
+
+      printf "| \`%-26s\` " "$A"
+
+      cat "$SPLIT" | while read -r F
+      do
+
+        V="$(get_value "$A" "$DIR_TMP/$F")"
+
+        if [[ "$LAST" != 'START'  ]]
+        then
+          if [[ "$A" != 'seconds' ]]
+          then
+            if [[ "$LAST" != "$V" ]]
+            then
+              VAL="**\`$V\`**"
+            else
+              VAL="\`$V\`"
+            fi
+          fi
+        else
+
+          if [[ "$A" = 'pwdLastSet' ]]
+          then
+            if [[ "${V%%"T"*}" = '1970-01-01' ]]
+            then
+              VAL="**\`$V\`**"
+            else
+              VAL="\`$V\`"
+            fi
+          else
+              VAL="\`$V\`"
+          fi
+
+        fi
+
+        printf "| %22s " "$VAL"
+        LAST="$V"
+
+      done
+      printf "|\\n"
+
+    done
+
+    pagebreak
+
+  done
+
+done < "$USR" >> "$OUT" && echo "$OUT"
+
+  #FIXME rm -f "$TMP"
+
+}
+
+function main()
+{
+
+  config
+  defaults
+  params "$@"
+  validate
+  clean_dir_file "$DIR_TMP" '*.ipa'
+  header > "$OUT"
+  log2diff
+
+}
+
+main "$@"
