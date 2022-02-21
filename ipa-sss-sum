@@ -23,14 +23,14 @@ DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
 function usage()
 {
 cat << EOF
- 
+
 ## \`$BIN\` Plot summarized SynLog attribute stats
 
 ### Usage
- 
+
 \`\`\`bash
 
-  $BIN [LOG_ATTRIBUTE] [IPA_SSS_SYN_LOG] [YYY-MM-DD]
+  $BIN [LOG_ATTRIBUTE] [IPA_SSS_SYN_LOG]
 
 \`\`\`
 
@@ -52,31 +52,51 @@ exit 0
 
 [[ "$1" =~ ^[-]+(h|help) ]] && usage
 
-LOG='ipa-sss-syn.log'
-#DATE='.*'
+function defaults()
+{
 
-[[ -z "$1"   ]] && die "EMPTY ATTRIBUTE"
+  LOG='ipa-sss-syn.log'
 
-ATTR="$1"
+}
 
-[[ -z "$2"   ]] || LOG="$2"
-[[ -e "$LOG" ]] || die "NOT FOUND LOG FILE $LOG"
-#[[ -z "$3"   ]] || DATE="$3"
+function params()
+{
 
-TOTAL="$(grep -c " $ATTR=" "$LOG")"
+  [[ -z "$1"   ]] && die "EMPTY ATTRIBUTE"
+  ATTR="$1"
 
-[[ "$TOTAL" -eq 0 ]] && die "NOT FOUND ATTRIBUTE $ATTR IN $LOG"
+  [[ -z "$2"   ]] || LOG="$2"
+  [[ -e "$LOG" ]] || die "NOT FOUND LOG FILE $LOG"
 
-N="$(basename "$LOG" .log)"
-DAT="$N-$ATTR.dat"
-PLT="$N-$ATTR.plt"
-PNG="$N-$ATTR.png"
+  TOTAL="$(grep -c " $ATTR=" "$LOG")"
+  [[ "$TOTAL" -eq 0 ]] && die "NOT FOUND ATTRIBUTE $ATTR IN $LOG"
 
-TMP="$(mktemp)"
-COLS="$(mktemp)"
-TOTS="$(mktemp)"
+}
 
-true > "$DAT"
+function validate()
+{
+
+  [[ -z "$DIR_DAT" ]] && cfg 'DIR_DAT'
+  [[ -z "$DIR_PLT" ]] && cfg 'DIR_PLT'
+  [[ -z "$DIR_PNG" ]] && cfg 'DIR_PNG'
+
+  N="$(basename "$LOG" .log)"
+  DAT="$DIR_DAT/$N-$ATTR.dat"
+  PLT="$DIR_PLT/$N-$ATTR.plt"
+  PNG="$DIR_PNG/$N-$ATTR.png"
+
+  [[ -d "$DIR_DAT" ]] || die "NOT FOUND DIR $DIR_DAT"
+  [[ -d "$DIR_PLT" ]] || die "NOT FOUND DIR $DIR_PLT"
+  [[ -d "$DIR_PNG" ]] || die "NOT FOUND DIR $DIR_PNG"
+
+  TMP="$(mktemp)"
+  COLS="$(mktemp)"
+  TOTS="$(mktemp)"
+  DAYS="$(mktemp)"
+
+  true > "$DAT"
+
+}
 
 print_header()
 {
@@ -123,23 +143,35 @@ printf "\\n"
 
 }
 
+function sum2dat()
+{
+
 print_header | tee -a "$DAT"
 
-awk '{print $1}' "$LOG" | sort -u | grep -v '^$' | while read -r D
+awk '{print $1}' "$LOG" | sort -u | grep -v '^$' > "$DAYS"
+
+while read -r D
 do
+
   sum_date "$D"
-done | tee -a "$DAT"
+
+done < "$DAYS" | tee -a "$DAT"
+
+}
+
+function dat2plt()
+{
 
 TCOLS="$(wc -l "$COLS" | awk '{print $1}')"
 
 PLOT=$(cat << EOF
 
-load '~/bin/osiux.plt'
+load '$IPA_PLT'
 
-set title  "$ATTR\n$LOG" font 'Inconsolata,14' tc lt 5
-set xlabel "days"       font 'Inconsolata,10' tc lt 5
-set ylabel "total (%)"  font 'Inconsolata,10' tc lt 5
-set xtics tc ls 1
+set title "$ATTR\n$LOG" font '$PLT_TITLE_FONT' tc lt $PLT_TITLE_LT noenhanced
+set xlabel "days"       font '$PLT_X_FONT' tc lt 5
+set ylabel "total (%)"  font '$PLT_Y_FONT' tc lt 5
+set xtics font "$PLT_X_TICS_FONT" tc ls 1 nomirror rotate by 90 right
 set mxtics
 set ytics tc ls 1
 set  tics tc ls 1
@@ -153,7 +185,7 @@ set tmargin 5
 
 set style line 102 lc rgb '#c0c0c0' lt 0 lw 1
 set grid back ls 102
-set key outside font 'Inconsolata,14' textcolor rgb '#ffffff'
+set key outside font '$PLT_KEY_FONT' textcolor rgb '#$PLT_KEY_COLOR'
 
 set style data histograms
 set style histogram rowstacked
@@ -165,8 +197,23 @@ plot for [i=3:($TCOLS+2):1] '$DAT' u i:xticlabels(1) t columnheader
 EOF
 )
 
-echo "$PLOT" > "$PLT" && gnuplot "$PLT" > "$PNG"
+echo "$PLOT" > "$PLT" && gnuplot "$PLT" > "$PNG" && stderror "$PNG"
 
 rm -f "$TMP"
 rm -f "$COLS"
 rm -f "$TOTS"
+rm -f "$DAYS"
+
+}
+
+function main()
+{
+  config
+  defaults
+  params "$@"
+  validate
+  sum2dat
+  dat2plt
+}
+
+main "$@"
