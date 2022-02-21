@@ -48,21 +48,6 @@ Check syntax using shellcheck.
 ```
 
 
-## `ipa-src-tbl` Generate Markdown Table Overview
-
-### Usage
-
-```bash
-
-  ipa-src-tbl
-
-```
-
-### Description
-
-Generate a markdown table output for each command script.
-
-
 ## `ipa-src-hlp` Generate Markdown Help
 
 ### Usage
@@ -76,6 +61,21 @@ Generate a markdown table output for each command script.
 ### Description
 
 Generate a markdown output for usage of each command script.
+
+
+## `ipa-src-tbl` Generate Markdown Table Overview
+
+### Usage
+
+```bash
+
+  ipa-src-tbl
+
+```
+
+### Description
+
+Generate a markdown table output for each command script.
 
 
 # `ipa srv` commands
@@ -116,195 +116,6 @@ Capture metrics of IPA process using pgrep, netstat and lsof
 
 
 # `ipa sss` commands
-
-
-## `ipa-sss-usr` Split SynLog by user
-
-### Usage
-
-```bash
-
-  ipa-sss-usr [IPA_SSS_SYN_LOG] [YYY-MM-DD]
-
-```
-
-### Description
-
-Split `ipa-sss-syn.log` by user.
-
-### Examples
-
-```bash
-
-  ipa-sss-usr ipa-sss-syn.log root
-
-```
-
-
-## `ipa-sss-plt` Plot SynLog between hours range
-
-### Usage:
-
-```bash
-
-  ipa-sss-plt [YYYY-MM-DD] [X_START] [X_END]
-
-```
-
-### Description
-
-Plot SynLog Stats:
-
-- LDAP Simultaneous Connections
-- KRB5 Simultaneous Connections
-- Average Host
-- Total SYNs
-- SYNs > 20s
-- SYNs < 20s
-- No-SYNs
-
-### Example:
-
-```bash
-
-	ipa-sss-plt 2022-01-01 07:00 19:00
-
-```
-
-See full example output in [`ipa-sss-plt.md`](examples/ipa-sss-plt.md)
-and [`ipa-sss-plt.pdf`](examples/ipa-sss-plt.pdf)
-
-
-## `ipa-sss-dat` Generate .dat file to plot SynLog
-
-### Usage
-
-```bash
-
-  ipa-sss-dat [IPA_SSS_SYN_LOG] [DATE]
-
-```
-
-### Description
-
-Generate data file from `ipa-sss-syn.log` to generate plot
-
-### Examples
-
-```bash
-
-	ipa-sss-dat ipa-sss-syn.log
-
-	ipa-sss-dat ipaai-2022-02-22-ipa-sss-syn.log 2022-02-22
-
-```
-
-
-## `ipa-sss-htm` Generate HTML gallery of SynLog Plots Images
-
-### Usage
-
-```bash
-
-  ipa-sss-htm
-
-```
-
-### Description
-
-Generate HTML gallery of SynLog Plots Images
-
-
-## `ipa-sss-chk` Verify Syntax of SynLog
-
-### Usage
-
-```bash
-
-  ipa-sss-chk [IPA_SSS_SYN_LOG] [IPA_SSS_CHK_LOG]
-
-```
-
-### Description
-
-Verify syntax of `ipa-sss-syn.log`, output check in `ipa-sss-chk.log`
-
-### Examples
-
-```bash
-
-	ipa-sss-chk ipa-sss-syn.log
-
-	LINE=0000207 COLUMN=11 INVALID lastLogon= NOT MATCH lastLogon=2021-10-21
-
-```
-
-
-## `ipa-sss-day` Split SynLog by date
-
-### Usage
-
-```bash
-
-  ipa-sss-day [IPA_SSS_SYN_LOG] [YYYY-MM-DD]
-
-```
-
-### Description
-
-Split `ipa-sss-syn.log` by date.
-
-### Examples
-
-Example split all days:
-
-```bash
-
-  ipa-sss-day ipa-sss-syn.log
-
-      3866 2021-11-24-ipa-sss-syn.log
-      4060 2021-11-25-ipa-sss-syn.log
-      4041 2021-11-26-ipa-sss-syn.log
-      3865 2021-11-27-ipa-sss-syn.log
-      3865 2021-11-28-ipa-sss-syn.log
-      4424 2021-11-29-ipa-sss-syn.log
-      4088 2021-11-30-ipa-sss-syn.log
-
-```
-
-Example split specific day:
-
-```bash
-
-  ipa-sss-day ipa-sss-syn.log 2022-01-01
-
-      3861 2022-01-01-ipa-sss-syn.log
-
-```
-
-
-## `ipa-sss-log` Generate report of SynLog
-
-### Usage
-
-```bash
-
-  ipa-sss-log [IPA_SSS_SYN_LOG] [YYYY-MM-DD] [REGEX_EXCLUDE]
-
-```
-
-### Generate stats report from `ipa-sss-syn.log`
-
-### Examples
-
-```bash
-
-	ipa-sss-log ipa-sss-syn.log
-
-```
-
-See full example output in [ipa-sss-syn.md](examples/ipa-sss-syn.md) and
-[ipa-sss-syn.pdf](examples/ipa-sss-syn.pdf)
 
 
 ## `ipa-sss-syn` IPA SSSD Synchronize Cache
@@ -427,14 +238,235 @@ See full example output in [ipa-sss-syn.md](examples/ipa-sss-syn.md) and
 
 ```
 
- 
+
+## `ipa-sss-chk` Verify Syntax of SynLog
+
+### Usage
+
+```bash
+
+  ipa-sss-chk [IPA_SSS_SYN_LOG] [IPA_SSS_CHK_LOG]
+
+```
+
+### Description
+
+Verify syntax of `ipa-sss-syn.log`, output check in `ipa-sss-chk.log`
+
+### Examples
+
+```bash
+
+	ipa-sss-chk ipa-sss-syn.log
+
+	LINE=0000207 COLUMN=11 INVALID lastLogon= NOT MATCH lastLogon=2021-10-21
+
+```
+
+
+## `ipa-sss-dat` Generate .dat file to plot SynLog
+
+### Usage
+
+```bash
+
+  ipa-sss-dat [IPA_SSS_SYN_LOG] [DATE]
+
+```
+
+### Description
+
+Generate data file from `ipa-sss-syn.log` to generate plot
+
+### Examples
+
+```bash
+
+	ipa-sss-dat ipa-sss-syn.log
+
+	ipa-sss-dat ipaai-2022-02-22-ipa-sss-syn.log 2022-02-22
+
+```
+
+
+## `ipa-sss-day` Split SynLog by date
+
+### Usage
+
+```bash
+
+  ipa-sss-day [IPA_SSS_SYN_LOG] [YYYY-MM-DD]
+
+```
+
+### Description
+
+Split `ipa-sss-syn.log` by date.
+
+### Examples
+
+Example split all days:
+
+```bash
+
+  ipa-sss-day ipa-sss-syn.log
+
+      3866 2021-11-24-ipa-sss-syn.log
+      4060 2021-11-25-ipa-sss-syn.log
+      4041 2021-11-26-ipa-sss-syn.log
+      3865 2021-11-27-ipa-sss-syn.log
+      3865 2021-11-28-ipa-sss-syn.log
+      4424 2021-11-29-ipa-sss-syn.log
+      4088 2021-11-30-ipa-sss-syn.log
+
+```
+
+Example split specific day:
+
+```bash
+
+  ipa-sss-day ipa-sss-syn.log 2022-01-01
+
+      3861 2022-01-01-ipa-sss-syn.log
+
+```
+
+
+## `ipa-sss-dff` show attributes differences between sync requests from log
+
+### Usage:
+
+```bash
+
+  ipa-sss-dff [IPA_SSS_SYN_LOG]
+
+```
+
+### Description
+
+Show attributes differences between user sync requests from log
+
+Attributes list:
+
+```
+
+	user
+	sAMAccountName
+	lockoutTime
+	pwdLastSet
+	pwdExpireDate
+	pwdExpireDays
+	pwdExpired
+	physicalDeliveryOfficeName
+	lastLogon
+	userAccountControl
+	adUserAccountControl
+	accountExpires
+	accountExpireDays
+	accountExpired
+	adAccountExpires
+	dataExpireTimestamp
+	sss_cache
+	newDataExpireTimestamp
+	newAdUserAccountControl
+	newAdAccountExpires
+	error
+	seconds
+
+```
+
+### Example:
+
+```bash
+
+	ipa-sss-dff
+
+```
+
+See full example output in [`ipa-sss-dff.md`](examples/ipa-sss-dff.md)
+and [`ipa-sss-dff.pdf`](examples/ipa-sss-dff.pdf)
+
+
+## `ipa-sss-htm` Generate HTML gallery of SynLog Plots Images
+
+### Usage
+
+```bash
+
+  ipa-sss-htm
+
+```
+
+### Description
+
+Generate HTML gallery of SynLog Plots Images
+
+
+## `ipa-sss-log` Generate report of SynLog
+
+### Usage
+
+```bash
+
+  ipa-sss-log [IPA_SSS_SYN_LOG] [YYYY-MM-DD] [REGEX_EXCLUDE]
+
+```
+
+### Generate stats report from `ipa-sss-syn.log`
+
+### Examples
+
+```bash
+
+	ipa-sss-log ipa-sss-syn.log
+
+```
+
+See full example output in [ipa-sss-syn.md](examples/ipa-sss-syn.md) and
+[ipa-sss-syn.pdf](examples/ipa-sss-syn.pdf)
+
+
+## `ipa-sss-plt` Plot SynLog between hours range
+
+### Usage:
+
+```bash
+
+  ipa-sss-plt [YYYY-MM-DD] [X_START] [X_END]
+
+```
+
+### Description
+
+Plot SynLog Stats:
+
+- LDAP Simultaneous Connections
+- KRB5 Simultaneous Connections
+- Average Host
+- Total SYNs
+- SYNs > 20s
+- SYNs < 20s
+- No-SYNs
+
+### Example:
+
+```bash
+
+	ipa-sss-plt 2022-01-01 07:00 19:00
+
+```
+
+See full example output in [`ipa-sss-plt.md`](examples/ipa-sss-plt.md)
+and [`ipa-sss-plt.pdf`](examples/ipa-sss-plt.pdf)
+
+
 ## `ipa-sss-sum` Plot summarized SynLog attribute stats
 
 ### Usage
- 
+
 ```bash
 
-  ipa-sss-sum [LOG_ATTRIBUTE] [IPA_SSS_SYN_LOG] [YYY-MM-DD]
+  ipa-sss-sum [LOG_ATTRIBUTE] [IPA_SSS_SYN_LOG]
 
 ```
 
@@ -447,6 +479,29 @@ Plot log attribute stats.
 ```bash
 
 	ipa-sss-sum userAccountControl
+
+```
+
+
+## `ipa-sss-usr` Split SynLog by user
+
+### Usage
+
+```bash
+
+  ipa-sss-usr [IPA_SSS_SYN_LOG] [YYY-MM-DD]
+
+```
+
+### Description
+
+Split `ipa-sss-syn.log` by user.
+
+### Examples
+
+```bash
+
+  ipa-sss-usr ipa-sss-syn.log root
 
 ```
 
