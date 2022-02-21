@@ -18,6 +18,8 @@ MAX_PWD_AGE: 30
 DIR_PLT: /var/www/html/syn/plt
 DIR_PNG: /var/www/html/syn/img
 DIR_DAT: /var/www/html/syn/dat
+DIR_TMP: /var/www/html/syn/tmp
+DIR_PDF: /var/www/html/syn/pdf
 IPA_SRV: ipa-srv-mon.log
 IPA_PLT: ipa-sss-plt.cfg
 PLT_KEY_COLOR: ffffff
