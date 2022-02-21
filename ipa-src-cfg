@@ -47,9 +47,14 @@ then
   [[ "$BIN" = "$(basename "${BASH_SOURCE[0]}")" ]] && cfg_usage
 fi
 
+stderror ()
+{
+  echo >&2 "$1"
+}
+
 function die()
 {
-  echo >&2 "ERROR: $1"
+  stderror "ERROR: $1"
   exit 1
 }
 
