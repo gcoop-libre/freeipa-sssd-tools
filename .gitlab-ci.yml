@@ -16,5 +16,4 @@ shell-check:
   script:
     - make chk
   tags:
-    - shell
     - ansible
