@@ -31,6 +31,6 @@ hlp:
 	ipa-src-hlp >ipa-src-hlp.md
 
 chk:
-	@ipa-src-chk
+	@./ipa-src-chk
 
 dev: chk hlp
