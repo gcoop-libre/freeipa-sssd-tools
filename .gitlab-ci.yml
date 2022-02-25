@@ -1,0 +1,31 @@
+---
+# -*- coding: utf-8 -*-
+
+before_script:
+  - env
+  - hostname
+  - ip r
+  - du --max-depth=1
+  - uname -a
+
+stages:
+  - shell-check
+  - python-check
+
+shell-check:
+  stage: shell-check
+  script:
+    - make chk
+  tags:
+    - ansible
+  only:
+    - feature/ipa-sss-tools
+
+python-check:
+  stage: python-check
+  script:
+    - cd ipa-api-syn && pylint *.py
+  tags:
+    - ansible
+  only:
+    - feature/api-ipa-syn
