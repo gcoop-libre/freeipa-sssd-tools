@@ -4,6 +4,10 @@ from api.root import Root
 from api.sync import Sync
 from api.query import Query
 
+"""
+IPA-API-SYN endpoint definitions
+"""
+
 app = Flask(__name__)
 api = Api(app)
 
