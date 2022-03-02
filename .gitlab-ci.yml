@@ -24,10 +24,10 @@ shell-check:
 python-check:
   stage: python-check
   script:
-    - cd ipa-api-syn && pylint
+    - pylint
         --ignored-modules=api.root,api.sync,api.query,flask,flask_restful
         --errors-only
-        *.py
+        ipa-api-syn
   tags:
     - ansible
   only:
