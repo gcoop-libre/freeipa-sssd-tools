@@ -5,8 +5,8 @@ import os
 import sqlite3
 import time
 import subprocess
-import yaml
 import logging
+import yaml
 from yaml import load, dump, Loader, Dumper
 
 get_acct_qry = "SELECT * FROM accounts ORDER BY timestamp ASC LIMIT 1"
