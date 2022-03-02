@@ -26,6 +26,7 @@ python-check:
   script:
     - cd ipa-api-syn && pylint
         --ignored-modules=api.root,api.sync,api.query
+        ,flask,flask_restful
         *.py
   tags:
     - ansible
