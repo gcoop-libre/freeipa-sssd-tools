@@ -24,7 +24,11 @@ shell-check:
 python-check:
   stage: python-check
   script:
-    - cd ipa-api-syn && pylint *.py
+    - cd ipa-api-syn
+    - <
+      pylint
+        --ignored-modules=api.root,api.sync,api.query
+        *.py
   tags:
     - ansible
   only:
