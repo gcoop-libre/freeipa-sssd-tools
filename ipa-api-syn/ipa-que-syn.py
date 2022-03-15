@@ -37,6 +37,9 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logging.info("op=quesyn status=started")
+if escpriv:
+    script = "sudo " + script
+
 while True:
     row_hash = ""
     row_time = ""
@@ -59,8 +62,6 @@ while True:
             con_proc.commit()
 
         logging.info("op=quesyn acct=" + row_acct + " status=account_inserted")
-        if escpriv:
-            script = "sudo " + script
         process = subprocess.Popen(
             "IPA_SSS_SYN_SHOW=0 " + script + " " + row_acct,
             shell=True,
