@@ -62,7 +62,30 @@ Example Response:
             "finish_time": "2022-02-25 08:52:20",
             "hash": "c490e266779319b2bbb9f4e10e1c6d79",
             "item": "1",
-            "result": "",
+            "result":  "stdout=2022-02-25 08:52                                      
+                               user                       apiquesyn       
+                               sAMAccountName             admin        
+                               lockoutTime                1970-01-01T00:00
+                               pwdLastSet                 1970-01-01T00:00
+                               pwdExpireDate              1970-01-31      
+                               pwdExpireDays              0               
+                               pwdExpired                 0               
+                               physicalDeliveryOfficeName 0               
+                               lastLogon                  1970-01-01T00:00
+                               userAccountControl         0               
+                               adUserAccountControl       0               
+                               accountExpires             1970-01-01T00:00
+                               accountExpiresDays         0               
+                               accountExpired             0               
+                               adAccountExpires           1970-01-01T00:00
+                               dataExpireTimestamp        1970-01-01T00:00
+                               sss_cache                  0               
+                               newDataExpireTimestamp     1970-01-01T00:00
+                               newAdUserAccountControl    0               
+                               newAdAccountExpires        1970-01-01T00:00
+                               error                      30              
+                               seconds                    0               
+                        stderr=",
             "timestamp": "2022-02-25 08:52:18"
         }
     ],
@@ -88,17 +111,44 @@ Example Response:
             "finish_time": "2022-02-25 08:52:20",
             "hash": "c490e266779319b2bbb9f4e10e1c6d79",
             "item": "1",
-            "result": "",
+            "result":  "stdout=2022-02-25 08:52                                      
+                               user                       apiquesyn       
+                               sAMAccountName             admin        
+                               lockoutTime                1970-01-01T00:00
+                               pwdLastSet                 1970-01-01T00:00
+                               pwdExpireDate              1970-01-31      
+                               pwdExpireDays              0               
+                               pwdExpired                 0               
+                               physicalDeliveryOfficeName 0               
+                               lastLogon                  1970-01-01T00:00
+                               userAccountControl         0               
+                               adUserAccountControl       0               
+                               accountExpires             1970-01-01T00:00
+                               accountExpiresDays         0               
+                               accountExpired             0               
+                               adAccountExpires           1970-01-01T00:00
+                               dataExpireTimestamp        1970-01-01T00:00
+                               sss_cache                  0               
+                               newDataExpireTimestamp     1970-01-01T00:00
+                               newAdUserAccountControl    0               
+                               newAdAccountExpires        1970-01-01T00:00
+                               error                      30              
+                               seconds                    0               
+                        stderr=",
             "timestamp": "2022-02-25 08:52:18"
         },
         {
             "account": "admin",
-            "dequeue_time": "2022-02-25 08:52:11",
-            "finish_time": "2022-02-25 08:52:13",
+            "dequeue_time": "2022-02-25 08:53:11",
+            "finish_time": "2022-02-25 08:53:13",
             "hash": "1d0309af7c805756225edc7982218dd6",
             "item": "2",
-            "result": "",
-            "timestamp": "2022-02-25 08:52:10"
+            "result": "stdout=2022-02-25 08:53
+                       ufser=apiquesyn
+                       sAMAccountName=admin
+                       error=2
+                       stderr=ALREADY PROCESS sAMAccountName=admin IN LAST MINUTE",                               
+            "timestamp": "2022-02-25 08:53:10"
         }
     ],
     "retval": "OK"
