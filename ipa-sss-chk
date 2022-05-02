@@ -1,0 +1,258 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2021 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# shellcheck disable=SC1090
+
+DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` Verify Syntax of SynLog
+
+### Usage
+
+\`\`\`bash
+
+  $BIN [IPA_SSS_SYN_LOG] [IPA_SSS_CHK_LOG]
+
+\`\`\`
+
+### Description
+
+Verify syntax of \`ipa-sss-syn.log\`, output check in \`ipa-sss-chk.log\`
+
+### Examples
+
+\`\`\`bash
+
+	$BIN ipa-sss-syn.log
+
+	LINE=0000207 COLUMN=11 INVALID lastLogon= NOT MATCH lastLogon=2021-10-21
+
+\`\`\`
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+LOG='ipa-sss-syn.log'
+OUT='ipa-sss-chk.log'
+
+[[ -z "$1"   ]] || LOG="$1"
+[[ -e "$LOG" ]] || die "NOT FOUND LOG FILE $LOG"
+[[ -z "$2"   ]] || OUT="$2"
+
+defaults()
+{
+
+BAK="$OUT.$(date +%s)"
+
+C_DATE=1
+C_TIME=2
+C_USER=3
+C_SAMA=4
+C_LOCK=5
+C_PWDL=6
+C_PWXD=7
+C_PWXY=8
+C_PWEX=9
+C_OFFI=10
+C_LLOG=11
+C_UAC1=12
+C_UAC2=13
+C_AXP1=14
+C_AXPD=15
+C_AXPX=16
+C_AXP2=17
+C_DXT1=18
+C_CCHE=19
+C_DXT2=20
+C_UAC3=21
+C_AXP3=22
+C_ERRR=23
+C_SECS=24
+
+R_DATE='[0-9]{4}-[0-9]{2}-[0-9]{2}'
+R_TIME='[0-9]{2}:[0-9]{2}'
+R_SPCE=' '
+R_USER='user=[a-zA-Z]+'
+R_STRN='[a-zA-Z0-9]+'
+R_SAMA="sAMAccountName=$R_STRN"
+R_DTIM="${R_DATE}T${R_TIME}"
+R_LOCK="lockoutTime=$R_DTIM"
+R_PWDL="pwdLastSet=$R_DTIM"
+R_PWXD="pwdExpireDate=$R_DATE"
+R_NUMB='[0-9]+'
+R_OFFI="physicalDeliveryOfficeName=$R_NUMB"
+R_LLOG="lastLogon=$R_DATE"
+R_PWXY="pwdExpireDays=$R_NUMB"
+R_PWEX="pwdExpired=$R_NUMB"
+R_UAC1="userAccountControl=$R_NUMB"
+R_UAC2="adUserAccountControl=$R_NUMB"
+R_AXP1="accountExpires=$R_DTIM"
+R_AXPD="accountExpiresDays=$R_NUMB"
+R_AXPX="accountExpired=$R_NUMB"
+R_AXP2="adAccountExpires=$R_DTIM"
+R_DXT1="dataExpireTimestamp=$R_DTIM"
+R_CCHE="sss_cache=$R_NUMB"
+R_DXT2="newDataExpireTimestamp=$R_DTIM"
+R_UAC3="newAdUserAccountControl=$R_NUMB"
+R_AXP3="newAdAccountExpires=$R_DTIM"
+R_ERRR="error=$R_ERRR"
+R_SECS="seconds=$R_NUMB"
+
+REGEX=''
+
+REGEX+="$R_DATE"                                                       # 2021-10-29
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_TIME"                                                       # 15:38
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_USER"                                                       # user=ipaai
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_SAMA"                                                       # sAMAccountName=0901
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_LOCK"                                                       # lockoutTime=1970-01-01T00:00
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_PWDL"                                                       # pwdLastSet=2021-10-22T13:02
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_PWXD"                                                       # pwdExpireDate=2021-11-21
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_PWXY"                                                       # pwdExpireDays=22
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_PWEX"                                                       # pwdExpired=0
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_OFFI"                                                       # physicalDeliveryOfficeName
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_LLOG"                                                       # lastLogon
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_UAC1"                                                       # userAccountControl=512
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_UAC2"                                                       # adUserAccountControl=512
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_AXP1"                                                       # accountExpires=1970-01-01T00:00
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_AXPD"                                                       # accountExpiresDays=0
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_AXPX"                                                       # accountExpired=1
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_AXP2"                                                       # adAccountExpires=1970-01-01T00:00
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_DXT1"                                                       # dataExpireTimestamp=1970-01-01T00:00
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_CCHE"                                                       # sss_cache=0
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_DXT2"                                                       # newDataExpireTimestamp=1970-01-01T00:00
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_UAC3"                                                       # newAdUserAccountControl=512
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_AXP3"                                                       # newAdAccountExpires=1970-01-01T00:00
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_ERRR"                                                       # error=0
+REGEX+="$R_SPCE"                                                       #
+REGEX+="$R_SECS"                                                       # seconds=0
+
+}
+
+not_match()
+{
+  printf "LINE=%07d COLUMN=%02d INVALID %40s NOT MATCH %s\\n" \
+         "$1" "$2" "$3" "$4" | tee -a "$OUT"
+}
+
+loop_log()
+{
+
+[[  -e "$OUT" ]] && cp "$OUT" "$BAK"
+true > "$OUT"
+N=0
+while read -r L
+do
+
+  N=$((N+1))
+
+  if [[ -z "$L" ]]
+  then
+    not_match "$N" '0' 'EMPTY' 'ALL'
+    continue
+  fi
+
+  echo "$L" | while read -r W_DATE W_TIME W_USER W_SAMA W_LOCK W_PWDL W_PWXD W_PWXY W_PWEX W_OFFI W_LLOG W_UAC1 W_UAC2 W_AXP1 W_AXPD W_AXPX W_AXP2 W_DXT1 W_CCHE W_DXT2 W_UAC3 W_AXP3 W_ERRR W_SECS
+  do
+
+    [[ -z "$W_DATE" ]] && W_DATE='NULL'
+    [[ -z "$W_TIME" ]] && W_TIME='NULL'
+    [[ -z "$W_USER" ]] && W_USER='NULL'
+    [[ -z "$W_SAMA" ]] && W_SAMA='NULL'
+    [[ -z "$W_LOCK" ]] && W_LOCK='NULL'
+    [[ -z "$W_PWDL" ]] && W_PWDL='NULL'
+    [[ -z "$W_PWXD" ]] && W_PWXD='NULL'
+    [[ -z "$W_PWXY" ]] && W_PWXY='NULL'
+    [[ -z "$W_PWEX" ]] && W_PWEX='NULL'
+    [[ -z "$W_OFFI" ]] && W_OFFI='NULL'
+    [[ -z "$W_LLOG" ]] && W_LLOG='NULL'
+    [[ -z "$W_UAC1" ]] && W_UAC1='NULL'
+    [[ -z "$W_UAC2" ]] && W_UAC2='NULL'
+    [[ -z "$W_AXP1" ]] && W_AXP1='NULL'
+    [[ -z "$W_AXPD" ]] && W_AXPD='NULL'
+    [[ -z "$W_AXPX" ]] && W_AXPX='NULL'
+    [[ -z "$W_AXP2" ]] && W_AXP2='NULL'
+    [[ -z "$W_DXT1" ]] && W_DXT1='NULL'
+    [[ -z "$W_CCHE" ]] && W_CCHE='NULL'
+    [[ -z "$W_DXT2" ]] && W_DXT2='NULL'
+    [[ -z "$W_UAC3" ]] && W_UAC3='NULL'
+    [[ -z "$W_AXP3" ]] && W_AXP3='NULL'
+    [[ -z "$W_ERRR" ]] && W_ERRR='NULL'
+    [[ -z "$W_SECS" ]] && W_SECS='NULL'
+
+    [[ "$W_DATE" =~ $R_DATE ]] || not_match "$N" "$C_DATE" "$W_DATE" '2021-10-29'
+    [[ "$W_TIME" =~ $R_TIME ]] || not_match "$N" "$C_TIME" "$W_TIME" '15:38'
+    [[ "$W_USER" =~ $R_USER ]] || not_match "$N" "$C_USER" "$W_USER" 'user=ipaai'
+    [[ "$W_SAMA" =~ $R_SAMA ]] || not_match "$N" "$C_SAMA" "$W_SAMA" 'sAMAccountName=0901'
+    [[ "$W_LOCK" =~ $R_LOCK ]] || not_match "$N" "$C_LOCK" "$W_LOCK" 'lockoutTime=1970-01-01T00:00'
+    [[ "$W_PWDL" =~ $R_PWDL ]] || not_match "$N" "$C_PWDL" "$W_PWDL" 'pwdLastSet=2021-10-22T13:02'
+    [[ "$W_PWXD" =~ $R_PWXD ]] || not_match "$N" "$C_PWXD" "$W_PWXD" 'pwdExpireDate=2021-11-21'
+    [[ "$W_PWXY" =~ $R_PWXY ]] || not_match "$N" "$C_PWXY" "$W_PWXY" 'pwdExpireDays=22'
+    [[ "$W_PWEX" =~ $R_PWEX ]] || not_match "$N" "$C_PWEX" "$W_PWEX" 'pwdExpired=0'
+    [[ "$W_OFFI" =~ $R_OFFI ]] || not_match "$N" "$C_OFFI" "$W_OFFI" 'physicalDeliveryOfficeName=0'
+    [[ "$W_LLOG" =~ $R_LLOG ]] || not_match "$N" "$C_LLOG" "$W_LLOG" 'lastLogon=2021-10-21'
+    [[ "$W_UAC1" =~ $R_UAC1 ]] || not_match "$N" "$C_UAC1" "$W_UAC1" 'userAccountControl=512'
+    [[ "$W_UAC2" =~ $R_UAC2 ]] || not_match "$N" "$C_UAC2" "$W_UAC2" 'adUserAccountControl=512'
+    [[ "$W_AXP1" =~ $R_AXP1 ]] || not_match "$N" "$C_AXP1" "$W_AXP1" 'accountExpires=1970-01-01T00:00'
+    [[ "$W_AXPD" =~ $R_AXPD ]] || not_match "$N" "$C_AXPD" "$W_AXPD" 'accountExpiresDays=0'
+    [[ "$W_AXPX" =~ $R_AXPX ]] || not_match "$N" "$C_AXPX" "$W_AXPX" 'accountExpired=1'
+    [[ "$W_AXP2" =~ $R_AXP2 ]] || not_match "$N" "$C_AXP2" "$W_AXP2" 'adAccountExpires=1970-01-01T00:00'
+    [[ "$W_DXT1" =~ $R_DXT1 ]] || not_match "$N" "$C_DXT1" "$W_DXT1" 'dataExpireTimestamp=1970-01-01T00:00'
+    [[ "$W_CCHE" =~ $R_CCHE ]] || not_match "$N" "$C_CCHE" "$W_CCHE" 'sss_cache=0'
+    [[ "$W_DXT2" =~ $R_DXT2 ]] || not_match "$N" "$C_DXT2" "$W_DXT2" 'newDataExpireTimestamp=1970-01-01T00:00'
+    [[ "$W_UAC3" =~ $R_UAC3 ]] || not_match "$N" "$C_UAC3" "$W_UAC3" 'newAdUserAccountControl=512'
+    [[ "$W_AXP3" =~ $R_AXP3 ]] || not_match "$N" "$C_AXP3" "$W_AXP3" 'newAdAccountExpires=1970-01-01T00:00'
+    [[ "$W_ERRR" =~ $R_ERRR ]] || not_match "$N" "$C_ERRR" "$W_ERRR" 'error=0'
+    [[ "$W_SECS" =~ $R_SECS ]] || not_match "$N" "$C_SECS" "$W_SECS" 'seconds=0'
+
+  done
+
+done < "$LOG"
+
+}
+
+defaults
+loop_log

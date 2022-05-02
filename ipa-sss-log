@@ -1,0 +1,281 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2021 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# shellcheck disable=SC1090
+# shellcheck disable=SC2129
+
+DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` Generate report of SynLog
+
+### Usage
+
+\`\`\`bash
+
+  $BIN [IPA_SSS_SYN_LOG] [YYYY-MM-DD] [REGEX_EXCLUDE]
+
+\`\`\`
+
+### Generate stats report from \`ipa-sss-syn.log\`
+
+### Examples
+
+\`\`\`bash
+
+	$BIN ipa-sss-syn.log
+
+\`\`\`
+
+See full example output in [ipa-sss-syn.md](examples/ipa-sss-syn.md) and
+[ipa-sss-syn.pdf](examples/ipa-sss-syn.pdf)
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+params()
+{
+
+LOG='ipa-sss-syn.log'
+TMP='ipa-sss-syn.tmp'
+
+DATE="$(date +%F)"
+EXCLUDE=''
+
+R_DATE='[0-9]+-[0-9]+-[0-9]+'
+
+[[ -z "$1"   ]] || LOG="$1"
+[[ -z "$2"   ]] || DATE="$2"
+[[ -z "$3"   ]] || EXCLUDE="$3"
+[[ -e "$LOG" ]] || die "NOT FOUND $LOG"
+
+NAME="$(basename "$LOG" .log)"
+OUT="${DIR_PDF}/${NAME}.md"
+
+if [[ -z "$EXCLUDE" ]]
+then
+  grep -E "^$DATE" "$LOG" > "$TMP"
+else
+  grep -E "^$DATE" "$LOG" | grep -vE "$EXCLUDE" > "$TMP"
+fi
+
+}
+
+header()
+{
+
+TITLE="report $LOG filter by $DATE"
+[[ "$EXCLUDE" != '' ]] && TITLE+=" and exclude $EXCLUDE"
+
+cat << EOF
+---
+date: $DATE
+title: $TITLE
+author: CC-BY-SA Osiris Alejandro Gomez osiris@gcoop.coop
+fontsize: 10pt
+classoption: portrait
+---
+EOF
+
+}
+
+defaults()
+{
+
+C_STRINGS=$(cat << EOF
+user
+sAMAccountName
+EOF
+)
+
+C_DATES=$(cat << EOF
+lockoutTime
+pwdLastSet
+pwdExpireDate
+accountExpires
+adAccountExpires
+dataExpireTimestamp
+newDataExpireTimestamp
+newAdAccountExpires
+EOF
+)
+
+C_NUMBERS=$(cat << EOF
+pwdExpireDays
+pwdExpired
+userAccountControl
+adUserAccountControl
+sss_cache
+newAdUserAccountControl
+error
+seconds
+EOF
+)
+
+}
+
+title2()
+{
+  printf "\\n\\n## %s\\n\\n" "$1"
+}
+
+code()
+{
+  echo
+  echo '```'
+  echo
+}
+
+get_string()
+{
+  grep -Eo "$1=[a-zA-Z0-9]+" "$TMP" | cut -d '=' -f2
+}
+
+get_number()
+{
+  grep -Eo "$1=[0-9]+" "$TMP" | cut -d '=' -f2
+}
+
+get_weekdate()
+{
+  grep -Eo "$1=$R_DATE" "$TMP" | cut -d '=' -f2 | while read -r D
+  do
+    date -d "$D" +'%a'
+  done
+}
+
+get_date()
+{
+  # FIXME generalize and reduce replacements with regex
+  grep -Eo "$1=$R_DATE" "$TMP" \
+  | cut -d '=' -f2 \
+  | sed 's/2016-..-../2016-MM-DD/g' \
+  | sed 's/2017-..-../2017-MM-DD/g' \
+  | sed 's/2018-..-../2018-MM-DD/g' \
+  | sed 's/2019-..-../2019-MM-DD/g' \
+  | sed 's/2020-..-../2020-MM-DD/g' \
+  | sed 's/2021-..-../2021-MM-DD/g' \
+  | sed 's/2022-01-../2022-01-DD/g' \
+  | sed 's/2022-02-../2022-02-DD/g' \
+  | sed 's/2022-03-../2022-03-DD/g' \
+  | sed 's/2022-04-../2022-04-DD/g' \
+  | sed 's/2022-05-../2022-05-DD/g' \
+  | sed 's/2022-06-../2022-06-DD/g' \
+  | sed 's/2022-07-../2022-07-DD/g' \
+  | sed 's/2022-08-../2022-08-DD/g' \
+  | sed 's/2022-09-../2022-09-DD/g' \
+  | sed 's/2022-10-../2022-10-DD/g' \
+  | sed 's/2022-11-../2022-11-DD/g' \
+  | sed 's/2022-12-../2022-12-DD/g'
+}
+
+show_numbers()
+{
+
+echo "$C_NUMBERS" | while read -r C
+do
+
+	title2 "$C"
+  code
+	get_number "$C" | sort | uniq -c | sort -nr | tee "$C.num" | barra
+  code
+
+done
+
+}
+
+show_dates()
+{
+
+echo "$C_DATES" | while read -r C
+do
+
+	title2 "$C"
+  code
+	get_date "$C" | sort | uniq -c | sort -nr | barra
+  code
+
+done
+
+}
+
+show_weekdates()
+{
+
+echo "$C_DATES" | while read -r C
+do
+
+	title2 "$C weekday"
+  code
+	get_weekdate "$C" | sort | uniq -c | sort -nr | barra
+  code
+
+done
+
+}
+
+show_strings()
+{
+
+echo "$C_STRINGS" | while read -r C
+do
+
+	title2 "$C"
+  code
+
+  if [[ "$C" = 'sAMAccountName' ]]
+  then
+    get_string "$C" | sort | uniq -c | grep -vE '^ +1 ' | sort -nr | barra
+  else
+    get_string "$C" | sort | uniq -c | sort -nr | barra
+  fi
+
+  code
+
+done
+
+}
+
+log2md()
+{
+
+header
+defaults
+show_strings
+show_numbers
+show_dates
+show_weekdates
+
+}
+
+main()
+{
+
+config
+params "$@"
+log2md > "$OUT" && echo >&2 "$OUT"
+
+}
+
+main "$@"
