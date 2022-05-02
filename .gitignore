@@ -5,3 +5,4 @@
 *.plt
 *.png
 *.tmp
+*.pyc

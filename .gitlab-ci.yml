@@ -11,10 +11,22 @@ before_script:
 
 stages:
   - shell-check
+  - shell-check
+  - python-check
 
 shell-check:
   stage: shell-check
   script:
     - make chk
+  tags:
+    - ansible
+
+python-check:
+  stage: python-check
+  script:
+    - pylint
+        --ignored-modules=api.root,api.sync,api.query,flask,flask_restful
+        --errors-only
+        ipa-api-syn
   tags:
     - ansible
