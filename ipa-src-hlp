@@ -59,6 +59,7 @@ do
   find . -maxdepth 1 -type f -executable -iname "ipa-$T-*" \
     | grep -E 'ipa-[a-z]{3}-[a-z]{3}$'                     \
     | cut -d/ -f2                                          \
+    | sort -u                                              \
     | while read -r F
   do
 
