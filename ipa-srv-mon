@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2022 Alejandro Vilte <avilte@avilte.com.ar>
+# Copyright (C) 2022 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# shellcheck disable=SC1090
+
+DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` Capture metrics of IPA process
+
+### Usage:
+
+\`\`\`bash
+
+  $BIN
+
+\`\`\`
+
+### Description
+
+Capture metrics of IPA process using pgrep, netstat and lsof
+
+- LDAP simultaneous connections (port 389)
+- LDAP SSL Simultaneous connections (port 636)
+- KRB5 simultaneous connections (port 88)
+- All TCP simultaneous connections
+- kdcproxy simultaneous process
+- dirsrv simultaneous process
+- pkiuser simultaneous process
+- simultaneous Open Files
+- Host Average
+
+### Example:
+
+\`\`\`bash
+
+	$BIN
+  2022-02-13_16:01 389:4 636:20 88:0 ALL:28 KDCP:2 DSRV:1 PKIU:1 LSOF:1807 AVG:average: 0,08, 0,08, 0,05
+
+\`\`\`
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+DATE="$(date +"$MON_DATE")"
+AVG1="$(uptime      | cut -d' ' -f12-)"
+DSRV="$(pgrep   -afc 'dirsrv')"
+KDCP="$(pgrep   -afc 'kdcproxy')"
+KRB5="$(netstat -nt | grep -wc '88')"
+LDAP="$(netstat -nt | grep -w '389' | grep -c 'ESTA')"
+LDAS="$(netstat -nt | grep -w '636' | grep -c 'ESTA')"
+LSOF="$(lsof    -l  | wc -l)"
+PALL="$(netstat -nt | wc -l)"
+PKIU="$(pgrep   -afc 'pkiuser')"
+
+printf "%s "       "$DATE"
+printf "389:%s "   "$LDAP"
+printf "636:%s "   "$LDAS"
+printf "88:%s "    "$KRB5"
+printf "ALL:%s "   "$PALL"
+printf "KDCP:%s "  "$KDCP"
+printf "DSRV:%s "  "$DSRV"
+printf "PKIU:%s "  "$PKIU"
+printf "LSOF:%s "  "$LSOF"
+printf "AVG:%s\n"  "$AVG1"

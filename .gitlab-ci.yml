@@ -1,0 +1,20 @@
+---
+# -*- coding: utf-8 -*-
+
+before_script:
+  - env
+  - hostname
+  - ip r
+  - du --max-depth=1
+  - uname -a
+  - shellcheck --version
+
+stages:
+  - shell-check
+
+shell-check:
+  stage: shell-check
+  script:
+    - make chk
+  tags:
+    - ansible
