@@ -1,5 +1,11 @@
 # _FreeIPA_ _SSSD_ Tools
 
+[[_TOC_]]
+
+## `ipa-api-syn` _API_ to synchronize _FreeIPA_ cache
+
+See API Help in [`README-ipa-api-syn.md`](README-ipa-api-syn.md)
+
 ## Tools Overview
 
 Repository of useful scripts for _FreeIPA_ and _SSSD_.
