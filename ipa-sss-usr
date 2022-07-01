@@ -79,6 +79,7 @@ while read -r USR _
 do
 
   USER_LOG="$USR-$DATE-$LOG"
+  USER_LOG="${USER_LOG/$DATE-$DATE/$DATE}"
   USER_BAK="bak/$USR-$LOG.$(date +%s)"
 
   [[ -e "$USER_LOG" ]] && cp -f "$USER_LOG" "$USER_BAK"
