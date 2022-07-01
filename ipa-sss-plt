@@ -70,10 +70,9 @@ function defaults()
 	HOUR="$(date +'%k' | tr -d ' ')"
 	NEXT="$((HOUR+1))"
 
-	XSTART='00:00'
-	XSTART='07:00'
+	[[ -n "$XSTART" ]] || XSTART='07:00'
+	[[ -n "$PP"     ]] || PP="1"
 	XEND="$NEXT:00"
-	PP="1"
 }
 
 function params()
