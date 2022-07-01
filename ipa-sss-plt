@@ -233,7 +233,7 @@ plot '$DIR_DAT/$DATE-crn-syw.dat' u 1:2          w p ls 30   pt 11 ps 2        t
      '$DIR_DAT/$DATE-aid-syn.dat' u 1:2          w p ls 38   pt 10 ps 2        ti 'aid syn', \
      '$DIR_DAT/$DATE-aid-now.dat' u 1:2          w p ls 39   pt 11 ps 2        ti 'aid n20', \
      '$DIR_DAT/$DATE-aid-nos.dat' u 1:2          w p ls 39   pt 10 ps 2        ti 'aid nsy', \
-     '$DIR_DAT/$DATE-total.dat'   u 1:2          w p ls 3    pt  6 ps 2         ti 'total syn', \
+     '$DIR_DAT/$DATE-total.dat'   u 1:(\$2*10)   w p ls 3    pt  6 ps 2         ti 'total syn', \
      '$DIR_DAT/$DATE-ldap.dat'    u 1:(\$2/100)  w l ls 20                      ti 'ldap', \
      '$DIR_DAT/$DATE-ldas.dat'    u 1:(\$2/100)  w l ls 21                      ti 'ldas', \
      '$DIR_DAT/$DATE-krb5.dat'    u 1:(\$2/100)  w l ls 22                      ti 'krb5', \
