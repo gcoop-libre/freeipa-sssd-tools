@@ -244,6 +244,7 @@ EOF
 
 echo "$HEAD" | sed 's/ \+$//g' > "$SEC_PLT"
 
+file2labels "$DIR_DAT/$DATE-crn-syw.dat" 20 "#8dd3c7" 1
 file2labels "$DIR_DAT/$DATE-aid-syw.dat" 20 "#bc80bd" 1
 file2labels "$DIR_DAT/$DATE-ivr-syw.dat" 20 "#80b1d3" 1
 file2labels "$DIR_DAT/$DATE-av01.dat"     8 "#33a02c" 1     "*10"
