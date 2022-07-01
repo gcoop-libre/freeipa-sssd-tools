@@ -210,6 +210,15 @@ Example split specific day:
 
 ```
 
+Example split specific day between hour range:
+
+```bash
+
+  XSTART=10:00 XEND=18:00 ipa-sss-day ipa-sss-syn.log 2022-01-01
+
+      2861 2022-01-01-ipa-sss-syn.log
+
+```
 
 ## `ipa-sss-dff` show attributes differences between sync requests from log
 
