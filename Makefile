@@ -2,7 +2,7 @@ SHELL:=/bin/bash
 
 DAY    ?= $$(date +'%F')
 LOG    ?= ipa-sss-syn.log
-USR    ?= ipaai
+USR    ?= root
 XSTART ?= 07:00
 XEND   ?= 19:00
 
