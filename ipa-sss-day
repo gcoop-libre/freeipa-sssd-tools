@@ -66,6 +66,15 @@ Example split specific day:
 
 \`\`\`
 
+Example split specific day between hour range:
+
+\`\`\`bash
+
+  XSTART=10:00 XEND=18:00 $BIN ipa-sss-syn.log 2022-01-01
+
+      2861 2022-01-01-ipa-sss-syn.log
+
+\`\`\`
 EOF
 exit 0
 }
@@ -88,15 +97,30 @@ fi
 
 mkdir -p bak
 
+[[ -n "$XSTART" ]] || XSTART='07:00'
+[[ -n "$XEND"   ]] || XEND='19:00'
+
 while read -r DATE _
 do
 
   DATE_LOG="$DATE-$LOG"
   DATE_BAK="bak/$DATE-$LOG.$(date +%s)"
+  ESTART="$(date -d "$DATE $XSTART" '+%s')"
+  EEND="$(date -d "$DATE $XEND" '+%s')"
 
   [[ -e "$DATE_LOG" ]] && cp -f "$DATE_LOG" "$DATE_BAK"
 
-  grep -E "^$DATE " "$LOG" > "$DATE_LOG" && wc -l "$DATE_LOG"
+  grep -E "^$DATE " "$LOG" | while read -r D TIME OTHERS
+  do
+
+		ETIME="$(date -d "$D $TIME" '+%s')"
+
+		[[ "$ETIME" -lt "$ESTART" ]] && continue
+		[[ "$ETIME" -gt "$EEND"   ]] && continue
+
+		echo "$D $TIME $OTHERS"
+
+	done > "$DATE_LOG" && wc -l "$DATE_LOG"
 
 done < "$DATE_LST"
 
