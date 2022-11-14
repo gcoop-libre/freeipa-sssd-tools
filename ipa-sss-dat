@@ -199,7 +199,7 @@ TOT_CRW="$((TOT_SCW+TOT_NCW))"
 TOT_IVR_AID="$((TOT_IVR+TOT_AID))"
 TOT_IVW_AIW="$((TOT_IVW+TOT_AIW))"
 
-OVW="$DATE-ovw.dat"
+OVW="$DIR_DAT/$DATE-ovw.dat"
 
 true                         >  "$OVW"
 printf "%s " "$DATE"         >> "$OVW"
