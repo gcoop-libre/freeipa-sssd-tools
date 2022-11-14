@@ -69,10 +69,10 @@ function defaults()
 	DATE="$(date +%F)"
 	HOUR="$(date +'%k' | tr -d ' ')"
 	NEXT="$((HOUR+1))"
-
 	[[ -n "$XSTART" ]] || XSTART='07:00'
 	[[ -n "$PP"     ]] || PP="1"
 	XEND="$NEXT:00"
+  [[ -n "$UMASK"  ]] || UMASK='0022'
 }
 
 function params()
@@ -269,6 +269,7 @@ function main()
 
   config
   defaults
+  umask "$UMASK"
   params "$@"
   validate
   plot
