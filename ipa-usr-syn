@@ -1,0 +1,102 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2022 Osiris Alejandro Gomez <osiux@osiux.com>
+# Copyright (C) 2022 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+BIN="$(basename "$0")"
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` IPA SSSD syn all usernames defined in file
+
+### Usage
+
+\`\`\`bash
+
+  $BIN
+
+\`\`\`
+
+### Description
+
+  Execute ipa-sss-syn for all usernames defined in file.
+
+### Example
+
+\`\`\`bash
+
+  $BIN
+
+\`\`\`
+
+### Standard Output
+
+\`\`\`
+
+	1234
+	5678
+	admin
+
+\`\`\`
+
+EOF
+exit 0
+}
+
+function die()
+{
+  echo >&2 "$1"
+  exit 1
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+[[ -n "$DATE"            ]] || DATE="$(date +'%F')"
+[[ -n "$USERLIST"        ]] || USERLIST="/tmp/ipa-usr-all-$DATE"
+[[ -n "$IPA_USR_SYN_DEL" ]] || IPA_USR_SYN_DEL=0
+
+if [[ -z "$1" ]]
+then
+
+  [[ -n "$IPA_USR_SYN_GET" ]] || IPA_USR_SYN_GET=1
+
+else
+
+  IPA_USR_SYN_GET=0
+  USERLIST="$1"
+
+fi
+
+if [[ "$IPA_USR_SYN_GET" -eq 1 ]]
+then
+
+  ipa-usr-all > "$USERLIST" || die "ERROR WRITE FILE $USERLIST"
+
+fi
+
+[[ -e "$USERLIST" ]] || die "NOT FOUND FILE $USERLIST"
+
+while read -r U
+do
+
+  ipa-sss-syn "$U"
+
+done < "$USERLIST"
+
+[[ "$IPA_USR_SYN_DEL" -eq 1 ]] && rm -f "$USERLIST" 2>/dev/null
