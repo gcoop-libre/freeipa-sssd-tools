@@ -99,4 +99,9 @@ do
 
 done < "$USERLIST"
 
-[[ "$IPA_USR_SYN_DEL" -eq 1 ]] && rm -f "$USERLIST" 2>/dev/null
+if [[ "$IPA_USR_SYN_DEL" -eq 1 ]]
+then
+
+  [[ -e "$USERLIST" ]] && rm -f "$USERLIST" 2>/dev/null
+
+fi
