@@ -17,6 +17,7 @@ Repository of useful scripts for _FreeIPA_ and _SSSD_.
 | `ipa-src-hlp` | Generate Markdown Help                             |
 | `ipa-src-tbl` | Generate Markdown Table Overview                   |
 | `ipa-srv-mon` | Capture metrics of IPA process                     |
+| `ipa-sss-all` | Generate and plot metrics in HTML gallery          |
 | `ipa-sss-chk` | Verify Syntax of SynLog                            |
 | `ipa-sss-dat` | Generate .dat file to plot SynLog                  |
 | `ipa-sss-day` | Split SynLog by date                               |
@@ -27,6 +28,8 @@ Repository of useful scripts for _FreeIPA_ and _SSSD_.
 | `ipa-sss-sum` | Plot summarized SynLog attribute stats             |
 | `ipa-sss-syn` | IPA SSSD Synchronize Cache                         |
 | `ipa-sss-usr` | Split SynLog by user                               |
+| `ipa-usr-all` | IPA SSSD get all users                             |
+| `ipa-usr-syn` | IPA SSSD syn all usernames defined in file         |
 
 See IPA tools source Help in [`ipa-src-hlp.md`](ipa-src-hlp.md)
 
