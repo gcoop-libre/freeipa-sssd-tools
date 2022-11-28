@@ -258,7 +258,7 @@ ldapsearch                        \
         V="$(ad2date "$V") ($V)"
       ;;
       userAccountControl:|physicalDeliveryOfficeName:)
-        V="$V"
+        :
       ;;
       *)
         continue
@@ -294,7 +294,7 @@ do
       V="$(ad2date $V) ($V)"
     ;;
     adUserAccountControl:)
-      V="$V"
+      :
     ;;
     lastUpdate:|dataExpireTimestamp:)
       V="$(date --utc -d "@$V" +'%F %H:%M') ($V)"

@@ -1,0 +1,154 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2022 Osiris Alejandro Gomez <osiux@osiux.com>
+# Copyright (C) 2022 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# shellcheck disable=SC2046
+# shellcheck disable=SC2086
+
+BIN="$(basename "$0")"
+[[ -n "$ERR" ]] || ERR='/var/log/ipa-usr-all.err'
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` IPA SSSD get all users
+
+### Usage
+
+\`\`\`bash
+
+  $BIN
+
+\`\`\`
+
+### Description
+
+  Search \`sAMAccountName\` of all users in external
+  _LDAP/ActiveDirectory_
+
+### Example
+
+\`\`\`bash
+
+  $BIN
+
+\`\`\`
+
+### Standard Output
+
+\`\`\`
+
+	1234
+	5678
+	admin
+
+\`\`\`
+
+### Config Example
+
+  Write config in \`~/.ipa-config\`:
+
+\`\`\`
+
+  # LDAP/AD
+  LDAP_BIND_DN: OU=users,DC=addomain,DC=com
+  LDAP_DOMAIN: addomain.com
+  LDAP_HOST: 10.0.0.1:389
+  LDAP_LDIF_WRAP: no
+  LDAP_NET_TIMEOUT: 5
+  LDAP_PASS: 53cr37
+  LDAP_SCOPE: sub
+  LDAP_SEARCH_BASE: OU=users,DC=addomain,DC=com
+  LDAP_SEARCH_USERS: OU=users,DC=addomain,DC=com
+  LDAP_EXCLUDE_USERS: '[A-Z\-]+'
+  LDAP_USER: admin@addomain.com
+  # LDB
+  IPA_DOMAIN: ipa.addomain.com
+  LDB_FILTER: (objectCategory=user)
+  LDB_HOST: /var/lib/sss/db/cache_ipa.addomain.com.ldb
+  MAX_PWD_AGE: 30
+
+\`\`\`
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+function defaults()
+{
+  IPA_CONFIG="$HOME/.ipa-config"
+}
+
+function die()
+{
+  echo >&2 "$1"
+  exit 1
+}
+
+function cfg()
+{
+  die "$EMPTY $1 TRY DEFINE IN $IPA_CONFIG"
+}
+
+function config()
+{
+
+  [[ ! -e "$IPA_CONFIG" ]] && die "NOT FOUND FILE: $IPA_CONFIG"
+
+  eval $(sed '/:/!d;/^ *#/d;s/:/ /;' < "$IPA_CONFIG" | while read -r k v
+  do
+      str="$k='$v'"
+      echo "$str"
+  done)
+
+}
+
+function ldaps()
+{
+  LDAP_OPTIONS=''
+  LDAP_OPTIONS+=" -o nettimeout=$LDAP_NET_TIMEOUT"
+  LDAP_OPTIONS+=" -o ldif-wrap=$LDAP_LDIF_WRAP"
+
+ldapsearch                            \
+  -h "$LDAP_HOST"                     \
+  -w "$LDAP_PASS"                     \
+  -D "$LDAP_USER"                     \
+  -LLL                                \
+  -b "$LDAP_SEARCH_USERS"             \
+  -s "$LDAP_SCOPE"                    \
+      $LDAP_OPTIONS                   \
+  -o ldif-wrap=no                     \
+  -E pr=2000/noprompt                 \
+  sAMAccountName                      \
+  2>> "$ERR"                          \
+  | awk '/sAMAccountName/ {print $2}' \
+  | grep -vE "$LDAP_EXCLUDE_USERS"    \
+  | sort -u
+}
+
+function main()
+{
+defaults
+config
+ldaps
+}
+
+main

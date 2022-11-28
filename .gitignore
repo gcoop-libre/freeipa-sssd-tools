@@ -6,3 +6,5 @@
 *.png
 *.tmp
 *.pyc
+ipa-api-syn/config.yml
+ipa-api-syn/config/settings.py

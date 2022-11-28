@@ -17,6 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # shellcheck disable=SC1090
+# shellcheck disable=SC1091
 # shellcheck disable=SC2129
 
 DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
@@ -199,7 +200,7 @@ TOT_CRW="$((TOT_SCW+TOT_NCW))"
 TOT_IVR_AID="$((TOT_IVR+TOT_AID))"
 TOT_IVW_AIW="$((TOT_IVW+TOT_AIW))"
 
-OVW="$DATE-ovw.dat"
+OVW="$DIR_DAT/$DATE-ovw.dat"
 
 true                         >  "$OVW"
 printf "%s " "$DATE"         >> "$OVW"

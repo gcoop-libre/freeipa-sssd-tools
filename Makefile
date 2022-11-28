@@ -2,15 +2,15 @@ SHELL:=/bin/bash
 
 DAY    ?= $$(date +'%F')
 LOG    ?= ipa-sss-syn.log
-USR    ?= ipaai
+USR    ?= root
 XSTART ?= 07:00
 XEND   ?= 19:00
 
 plt: log dat png htm
 
 log:
-	ipa-sss-day $(LOG) $(DAY)
-	ipa-sss-usr $(LOG) $(DAY)
+	XSTART=$(XSTART) XEND=$(XEND) ipa-sss-day $(LOG) $(DAY)
+	ipa-sss-usr $(DAY)-$(LOG) $(DAY)
 
 sum:
 	ipa-sss-sum userAccountControl $(USR)-$(DAY)-$(LOG)

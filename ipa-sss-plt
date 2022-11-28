@@ -17,6 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # shellcheck disable=SC1090
+# shellcheck disable=SC1091
 # shellcheck disable=SC2001
 
 DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
@@ -51,7 +52,7 @@ Plot SynLog Stats:
 
 \`\`\`bash
 
-	$BIN 2022-01-01 07:00 19:00
+  $BIN 2022-01-01 07:00 19:00
 
 \`\`\`
 
@@ -66,53 +67,55 @@ exit 0
 
 function defaults()
 {
-	DATE="$(date +%F)"
-	HOUR="$(date +'%k' | tr -d ' ')"
-	NEXT="$((HOUR+1))"
-
-	XSTART='00:00'
-	XSTART='07:00'
-	XEND="$NEXT:00"
-	PP="1"
+  DATE="$(date +%F)"
+  HOUR="$(date +'%k' | tr -d ' ')"
+  NEXT="$((HOUR+1))"
+  [[ -n "$UMASK"  ]] || UMASK='0022'
+  [[ -n "$XSTART" ]] || XSTART='07:00'
+  [[ -n "$PP"     ]] || PP="1"
+  XEND="$NEXT:00"
 }
 
 function params()
 {
 
-	[[ -z "$1" ]] || DATE="$1"
-	[[ -z "$2" ]] || XSTART="$2"
-	[[ -z "$3" ]] || XEND="$3"
-	[[ -z "$4" ]] || PP="$4"
+  [[ -z "$1" ]] || DATE="$1"
+  [[ -z "$2" ]] || XSTART="$2"
+  [[ -z "$3" ]] || XEND="$3"
+  [[ -z "$4" ]] || PP="$4"
 
-	XS="${XSTART//:/}"
-	XE="${XEND//:/}"
+  XS="${XSTART//:/}"
+  XE="${XEND//:/}"
 
-	SEC_PLT="$DIR_PLT/$DATE-seconds-vs-total-vs-ips-$XS-$XE.plt"
-	SEC_PNG="$DIR_PNG/$DATE-seconds-vs-total-vs-ips-$XS-$XE.png"
+  SEC_PLT="$DIR_PLT/$DATE-seconds-vs-total-vs-ips-$XS-$XE.plt"
+  SEC_PNG="$DIR_PNG/$DATE-seconds-vs-total-vs-ips-$XS-$XE.png"
   SEC_ERR="$DIR_PLT/$DATE-seconds-vs-total-vs-ips-$XS-$XE.err"
   SEC_DAT="$DIR_DAT/$DATE-seconds.dat"
   SEC_TOT="$DIR_DAT/$DATE-total.dat"
+
+  TOTAL_DAT="$DIR_DAT/$DATE-total.dat"
+  TOTAL="$(awk 'BEGIN {S=0} {S+=$2} END {print S}' "$TOTAL_DAT")"
 
 }
 
 function validate()
 {
 
-	[[ -z "$PLT_KEY_COLOR"    ]] && cfg 'PLT_KEY_COLOR'
-	[[ -z "$PLT_KEY_FONT"     ]] && cfg 'PLT_KEY_FONT'
-	[[ -z "$PLT_TITLE"        ]] && cfg 'PLT_TITLE'
-	[[ -z "$PLT_TITLE_FONT"   ]] && cfg 'PLT_TITLE_FONT'
-	[[ -z "$PLT_TITLE_LT"     ]] && cfg 'PLT_TITLE_LT'
-	[[ -z "$PLT_X_FONT"       ]] && cfg 'PLT_X_FONT'
-	[[ -z "$PLT_X_LABEL"      ]] && cfg 'PLT_X_LABEL'
-	[[ -z "$PLT_Y_FONT"       ]] && cfg 'PLT_Y_FONT'
-	[[ -z "$PLT_Y_LABEL"      ]] && cfg 'PLT_Y_LABEL'
+  [[ -z "$PLT_KEY_COLOR"    ]] && cfg 'PLT_KEY_COLOR'
+  [[ -z "$PLT_KEY_FONT"     ]] && cfg 'PLT_KEY_FONT'
+  [[ -z "$PLT_TITLE"        ]] && cfg 'PLT_TITLE'
+  [[ -z "$PLT_TITLE_FONT"   ]] && cfg 'PLT_TITLE_FONT'
+  [[ -z "$PLT_TITLE_LT"     ]] && cfg 'PLT_TITLE_LT'
+  [[ -z "$PLT_X_FONT"       ]] && cfg 'PLT_X_FONT'
+  [[ -z "$PLT_X_LABEL"      ]] && cfg 'PLT_X_LABEL'
+  [[ -z "$PLT_Y_FONT"       ]] && cfg 'PLT_Y_FONT'
+  [[ -z "$PLT_Y_LABEL"      ]] && cfg 'PLT_Y_LABEL'
   [[ -z "$DIR_PLT"          ]] && cfg 'IPA_PLT'
   [[ -z "$DIR_PNG"          ]] && cfg 'IPA_PNG'
   [[ -z "$IPA_PLT"          ]] && cfg 'IPA_PLT'
 
-	[[ -e "$SEC_DAT"          ]] || die "NOT FOUND FILE $SEC_DAT"
-	[[ -e "$SEC_TOT"          ]] || die "NOT FOUND FILE $SEC_TOT"
+  [[ -e "$SEC_DAT"          ]] || die "NOT FOUND FILE $SEC_DAT"
+  [[ -e "$SEC_TOT"          ]] || die "NOT FOUND FILE $SEC_TOT"
   [[ -d "$DIR_PLT"          ]] || die "NOT FOUND DIR $DIR_PLT"
   [[ -d "$DIR_PNG"          ]] || die "NOT FOUND DIR $DIR_PNG"
 }
@@ -208,7 +211,7 @@ set xdata time;set timefmt '%H:%M';set format x '%H:%M'
 set xlabel "$PLT_X_LABEL" font "$PLT_X_FONT" tc lt 5
 set ylabel "$PLT_Y_LABEL" font "$PLT_Y_FONT" tc lt 5
 
-set title "$PLT_TITLE\n$DATE | $XSTART - $XEND" font "$PLT_TITLE_FONT" tc lt $PLT_TITLE_LT
+set title "$PLT_TITLE\n$DATE | $TOTAL syn | $XSTART - $XEND" font "$PLT_TITLE_FONT" tc lt $PLT_TITLE_LT
 set key on
 
 set yrange [-10:100]
@@ -231,7 +234,7 @@ plot '$DIR_DAT/$DATE-crn-syw.dat' u 1:2          w p ls 30   pt 11 ps 2        t
      '$DIR_DAT/$DATE-aid-syn.dat' u 1:2          w p ls 38   pt 10 ps 2        ti 'aid syn', \
      '$DIR_DAT/$DATE-aid-now.dat' u 1:2          w p ls 39   pt 11 ps 2        ti 'aid n20', \
      '$DIR_DAT/$DATE-aid-nos.dat' u 1:2          w p ls 39   pt 10 ps 2        ti 'aid nsy', \
-     '$DIR_DAT/$DATE-total.dat'   u 1:2          w p ls 3    pt  6 ps 2         ti 'total syn', \
+     '$DIR_DAT/$DATE-total.dat'   u 1:(\$2*10)   w p ls 3    pt  6 ps 2         ti 'total syn', \
      '$DIR_DAT/$DATE-ldap.dat'    u 1:(\$2/100)  w l ls 20                      ti 'ldap', \
      '$DIR_DAT/$DATE-ldas.dat'    u 1:(\$2/100)  w l ls 21                      ti 'ldas', \
      '$DIR_DAT/$DATE-krb5.dat'    u 1:(\$2/100)  w l ls 22                      ti 'krb5', \
@@ -242,10 +245,12 @@ EOF
 
 echo "$HEAD" | sed 's/ \+$//g' > "$SEC_PLT"
 
+file2labels "$DIR_DAT/$DATE-crn-syw.dat" 20 "#8dd3c7" 1
 file2labels "$DIR_DAT/$DATE-aid-syw.dat" 20 "#bc80bd" 1
 file2labels "$DIR_DAT/$DATE-ivr-syw.dat" 20 "#80b1d3" 1
 file2labels "$DIR_DAT/$DATE-av01.dat"     8 "#33a02c" 1     "*10"
 file2labels "$DIR_DAT/$DATE-krb5.dat"  1900 "#b2df8a" "$PP" "/100"
+file2labels "$DIR_DAT/$DATE-total.dat"    2 "#0080ff" 1     "*10"
 
 if [[ "$XEND" != '19:00' ]]
 then
@@ -255,7 +260,6 @@ fi
 file2labels "$DIR_DAT/$DATE-total.dat"    5 "#0080ff" 1
 
 echo "$PLOT" | sed 's/ \+$//g' | sed 's/, /, \\\n/g'  >>"$SEC_PLT"
-
 gnuplot "$SEC_PLT" > "$SEC_PNG" 2>"$SEC_ERR" && echo "$SEC_PNG"
 
 }
@@ -265,6 +269,7 @@ function main()
 
   config
   defaults
+  umask "$UMASK"
   params "$@"
   validate
   plot

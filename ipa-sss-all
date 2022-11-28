@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2022 Osiris Alejandro Gomez <osiux@osiux.com>
 # Copyright (C) 2022 Osiris Alejandro Gomez <osiris@gcoop.coop>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -25,19 +26,31 @@ function usage()
 {
 cat << EOF
 
-## \`$BIN\` Generate Markdown Table Overview
+## \`$BIN\` Generate and plot metrics in HTML gallery
 
 ### Usage
 
 \`\`\`bash
 
-  $BIN
+  $BIN [IPA_SSS_SYN_LOG] [YYYY-MM-DD]
 
 \`\`\`
 
 ### Description
 
-Generate a markdown table output for each command script.
+Split \`ipa-sss-syn.log\` by date, generate \`.dat\` files, plot
+between hours range and generate _HTML_ gallery of SynLog Plots Images.
+
+### Example
+
+\`\`\`bash
+
+  $BIN
+
+  /var/www/html/syn/img/2022-11-14-seconds-vs-total-vs-ips-0700-1900.png
+  /var/www/html/syn/index.html
+
+\`\`\`
 
 EOF
 exit 0
@@ -45,31 +58,16 @@ exit 0
 
 [[ "$1" =~ ^[-]+(h|help) ]] && usage
 
-function title2table()
-{
+[[ -n "$LOG"    ]] || LOG='ipa-sss-syn.log'
+[[ -z "$1"      ]] || LOG="$1"
+[[ -e "$LOG"    ]] || die "NOT FOUND FILE $LOG"
+[[ -n "$DATE"   ]] || DATE="$(date +%F)"
+[[ -z "$2"      ]] || DATE="$2"
+[[ -n "$USR"    ]] || USR='root'
+[[ -n "$XSTART" ]] || XSTART='07:00'
+[[ -n "$XEND"   ]] || XEND='19:00'
 
-  $1 -h                 \
-    | grep '^## '       \
-    | head -1           \
-    | sed 's/##//g'     \
-    | while read -r F D
-      do
-        printf "| %13s | %-50s |\n" "$F" "$D"
-      done
-
-}
-
-printf "| %-13s | %-50s |\n" "script" "description"
-
-find . -maxdepth 1 -type f -executable -iname 'ipa-*' \
-  | grep -E 'ipa-[a-z]{3}-[a-z]{3}$'                  \
-  | cut -d/ -f2-                                      \
-  | sort -u                                           \
-  | while read -r F
-    do
-
-      TABLE="$(title2table "$F")"
-      [[ -z "$TABLE" ]] && TABLE="| \`$F\` | FIXME |"
-      echo "$TABLE"
-
-    done
+ipa-sss-day "$LOG"            "$DATE"
+ipa-sss-dat "$DATE-$LOG"      "$DATE"
+ipa-sss-plt "$DATE" "$XSTART" "$XEND"
+ipa-sss-htm

@@ -118,6 +118,33 @@ Capture metrics of IPA process using pgrep, netstat and lsof
 # `ipa sss` commands
 
 
+## `ipa-sss-all` Generate and plot metrics in HTML gallery
+
+### Usage
+
+```bash
+
+  ipa-sss-all [IPA_SSS_SYN_LOG] [YYYY-MM-DD]
+
+```
+
+### Description
+
+Split `ipa-sss-syn.log` by date, generate `.dat` files, plot
+between hours range and generate _HTML_ gallery of SynLog Plots Images.
+
+### Example
+
+```bash
+
+  ipa-sss-all
+
+  /var/www/html/syn/img/2022-11-14-seconds-vs-total-vs-ips-0700-1900.png
+  /var/www/html/syn/index.html
+
+```
+
+
 ## `ipa-sss-chk` Verify Syntax of SynLog
 
 ### Usage
@@ -210,6 +237,15 @@ Example split specific day:
 
 ```
 
+Example split specific day between hour range:
+
+```bash
+
+  XSTART=10:00 XEND=18:00 ipa-sss-day ipa-sss-syn.log 2022-01-01
+
+      2861 2022-01-01-ipa-sss-syn.log
+
+```
 
 ## `ipa-sss-dff` show attributes differences between sync requests from log
 
@@ -331,7 +367,7 @@ Plot SynLog Stats:
 
 ```bash
 
-	ipa-sss-plt 2022-01-01 07:00 19:00
+  ipa-sss-plt 2022-01-01 07:00 19:00
 
 ```
 
@@ -504,3 +540,100 @@ Split `ipa-sss-syn.log` by user.
   ipa-sss-usr ipa-sss-syn.log root
 
 ```
+
+
+# `ipa usr` commands
+
+
+## `ipa-usr-all` IPA SSSD get all users
+
+### Usage
+
+```bash
+
+  ipa-usr-all
+
+```
+
+### Description
+
+  Search `sAMAccountName` of all users in external
+  _LDAP/ActiveDirectory_
+
+### Example
+
+```bash
+
+  ipa-usr-all
+
+```
+
+### Standard Output
+
+```
+
+	1234
+	5678
+	admin
+
+```
+
+### Config Example
+
+  Write config in `~/.ipa-config`:
+
+```
+
+  # LDAP/AD
+  LDAP_BIND_DN: OU=users,DC=addomain,DC=com
+  LDAP_DOMAIN: addomain.com
+  LDAP_HOST: 10.0.0.1:389
+  LDAP_LDIF_WRAP: no
+  LDAP_NET_TIMEOUT: 5
+  LDAP_PASS: 53cr37
+  LDAP_SCOPE: sub
+  LDAP_SEARCH_BASE: OU=users,DC=addomain,DC=com
+  LDAP_SEARCH_USERS: OU=users,DC=addomain,DC=com
+  LDAP_EXCLUDE_USERS: '[A-Z\-]+'
+  LDAP_USER: admin@addomain.com
+  # LDB
+  IPA_DOMAIN: ipa.addomain.com
+  LDB_FILTER: (objectCategory=user)
+  LDB_HOST: /var/lib/sss/db/cache_ipa.addomain.com.ldb
+  MAX_PWD_AGE: 30
+
+```
+
+
+## `ipa-usr-syn` IPA SSSD syn all usernames defined in file
+
+### Usage
+
+```bash
+
+  ipa-usr-syn
+
+```
+
+### Description
+
+  Execute ipa-sss-syn for all usernames defined in file.
+
+### Example
+
+```bash
+
+  ipa-usr-syn
+
+```
+
+### Standard Output
+
+```
+
+	1234
+	5678
+	admin
+
+```
+

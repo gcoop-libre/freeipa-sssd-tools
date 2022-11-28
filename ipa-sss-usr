@@ -17,6 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # shellcheck disable=SC1090
+# shellcheck disable=SC1091
 
 DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
 
@@ -79,6 +80,7 @@ while read -r USR _
 do
 
   USER_LOG="$USR-$DATE-$LOG"
+  USER_LOG="${USER_LOG/$DATE-$DATE/$DATE}"
   USER_BAK="bak/$USR-$LOG.$(date +%s)"
 
   [[ -e "$USER_LOG" ]] && cp -f "$USER_LOG" "$USER_BAK"
