@@ -25,6 +25,7 @@ Repository of useful scripts for _FreeIPA_ and _SSSD_.
 | `ipa-sss-htm` | Generate HTML gallery of SynLog Plots Images       |
 | `ipa-sss-log` | Generate report of SynLog                          |
 | `ipa-sss-plt` | Plot SynLog between hours range                    |
+| `ipa-sss-rsy` | IPA SSSD copy cache files to preserve RAMDISK      |
 | `ipa-sss-sum` | Plot summarized SynLog attribute stats             |
 | `ipa-sss-syn` | IPA SSSD Synchronize Cache                         |
 | `ipa-sss-usr` | Split SynLog by user                               |
