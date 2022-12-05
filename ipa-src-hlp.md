@@ -375,6 +375,29 @@ See full example output in [`ipa-sss-plt.md`](examples/ipa-sss-plt.md)
 and [`ipa-sss-plt.pdf`](examples/ipa-sss-plt.pdf)
 
 
+## `ipa-sss-rsy` IPA SSSD copy cache files to preserve RAMDISK
+
+### Usage
+
+```bash
+
+  ipa-sss-rsy [SSS_BAK]
+
+```
+
+### Description
+
+  Copy SSSD cache files in /var/lib/sss/db to preserver hAMDISK.
+
+### Example
+
+```bash
+
+  ipa-sss-rsy
+
+```
+
+
 ## `ipa-sss-sum` Plot summarized SynLog attribute stats
 
 ### Usage
