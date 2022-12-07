@@ -317,6 +317,33 @@ and [`ipa-sss-dff.pdf`](examples/ipa-sss-dff.pdf)
 Generate HTML gallery of SynLog Plots Images
 
 
+## `ipa-sss-ldb` IPA SSSD cache count records
+
+### Usage
+
+```bash
+
+  ipa-sss-ldb [groups|users]
+
+```
+
+### Description
+
+Execute `ldapsearch` in `/var/lib/sss/db/cache_DOMAIN.ldb` to get
+total records of groups and users.
+
+### Example
+
+```bash
+
+  ipa-sss-ldb
+
+   55 cn=groups,cn=example.com,cn=sysdb
+    1 cn=users,cn=example.com,cn=sysdb
+
+```
+
+
 ## `ipa-sss-log` Generate report of SynLog
 
 ### Usage
