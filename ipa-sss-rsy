@@ -58,6 +58,7 @@ exit 0
 [[ -n "$SYSLOG"  ]] || SYSLOG=0
 [[ -z "$1"       ]] || SSS_BAK="$1"
 [[ -n "$LAST"    ]] || LAST="$SSS_BAK/.$BIN"
+[[ -n "$LDB_CHK" ]] || LDB_CHK='1'
 
 function die ()
 {
@@ -73,6 +74,16 @@ function log ()
   echo "$(date +'%F %T') $HOST $BIN: ${LEVEL//user./} $1"
 }
 
+function total_users()
+{
+  ipa-sss-ldb users | awk '{print $1}'
+}
+
+function total_groups()
+{
+  ipa-sss-ldb groups | awk '{print $1}'
+}
+
 mkdir -p "$SSS_BAK" || die "FAILED TO CREATE DIRECTORY $SSS_BAK"
 
 SSS_MNT="$(mount | grep -o "$SSS_DIR")"
@@ -80,6 +91,19 @@ SSS_MNT="$(mount | grep -o "$SSS_DIR")"
 [[ "$SSS_DIR" = "$SSS_MNT" ]] || die "ABORT $SSS_DIR NOT MOUNTED"
 [[ -d "$SSS_DIR" ]] || die "NOT FOUND DIRECTORY $SSS_DIR"
 [[ -d "$SSS_BAK" ]] || die "NOT FOUND DIRECTORY $SSS_BAK"
+
+if [[ "$LDB_CHK" -eq 1 ]]
+then
+
+  TOTAL_GROUPS="$(total_groups)"
+  TOTAL_USERS="$(total_users)"
+
+  # EXIT IMMEDIATELY IF A COMMAND EXITS WITH A NON-ZERO STATUS
+  set -e
+  [[ "$TOTAL_GROUPS" -eq 0 ]] && die "ABORT 0 GROUPS"
+  [[ "$TOTAL_USERS"  -eq 0 ]] && die "ABORT 0 USERS"
+
+fi
 
 log "rsync $SSS_DIR $SSS_BAK"
 rsync -a "$SSS_DIR/" "$SSS_BAK/" && echo "$NOW" > "$LAST"
