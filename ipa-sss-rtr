@@ -1,0 +1,111 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2022 Osiris Alejandro Gomez <osiux@osiux.com>
+# Copyright (C) 2022 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+BIN="$(basename "$0")"
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` IPA SSSD restore cache files from backup
+
+### Usage
+
+\`\`\`bash
+
+  $BIN [SSS_BAK]
+
+\`\`\`
+
+### Description
+
+  Copy SSSD cache files in /var/lib/sss/db to preserve RAMDISK.
+
+### Example
+
+\`\`\`bash
+
+  $BIN
+
+\`\`\`
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+[[ -n "$HOST"    ]] || HOST="$(hostname -s)"
+[[ -n "$NOW"     ]] || NOW="$(date +%s)"
+[[ -n "$SSS_BAK" ]] || SSS_BAK='/var/lib/ipa/backup/sss-db'
+[[ -n "$SSS_DIR" ]] || SSS_DIR='/var/lib/sss/db'
+[[ -n "$SYSLOG"  ]] || SYSLOG=0
+[[ -z "$1"       ]] || SSS_BAK="$1"
+[[ -n "$LAST"    ]] || LAST="$SSS_BAK/.$BIN"
+[[ -n "$LDB_CHK" ]] || LDB_CHK='1'
+
+function die ()
+{
+  log "$1" 'user.error'
+  exit 1
+}
+
+function log ()
+{
+  local LEVEL='user.notice'
+  [[ -z "$2"         ]] || LEVEL="$2"
+  [[ "$SYSLOG" -eq 1 ]] && logger -p "$LEVEL" -t "$BIN" "$1"
+  echo "$(date +'%F %T') $HOST $BIN: ${LEVEL//user./} $1"
+}
+
+function total_users()
+{
+  export LDB_DIR="$SSS_BAK"
+  ipa-sss-ldb users | awk '{print $1}'
+}
+
+function total_groups()
+{
+  export LDB_DIR="$SSS_BAK"
+  ipa-sss-ldb groups | awk '{print $1}'
+}
+
+pgrep ipa-sss-rsy 2>/dev/null && die "ABORT ipa-sss-rsy IS RUNNING"
+
+SSS_MNT="$(mount | grep -o "$SSS_DIR")"
+
+[[ "$SSS_DIR" = "$SSS_MNT" ]] || die "ABORT $SSS_DIR NOT MOUNTED"
+[[ -d "$SSS_DIR" ]] || die "NOT FOUND DIRECTORY $SSS_DIR"
+[[ -d "$SSS_BAK" ]] || die "NOT FOUND DIRECTORY $SSS_BAK"
+
+if [[ "$LDB_CHK" -eq 1 ]]
+then
+
+  TOTAL_GROUPS="$(total_groups)"
+  TOTAL_USERS="$(total_users)"
+
+  # EXIT IMMEDIATELY IF A COMMAND EXITS WITH A NON-ZERO STATUS
+  set -e
+  [[ "$TOTAL_GROUPS" -eq 0 ]] || die "ABORT 0 GROUPS IN $LDB_DIR"
+  [[ "$TOTAL_USERS"  -eq 0 ]] || die "ABORT 0 USERS $LDB_DIR"
+
+fi
+
+log "rsync $SSS_BAK $SSS_DIR"
+rsync -a "$SSS_BAK/" "$SSS_DIR/"
