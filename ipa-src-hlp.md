@@ -425,6 +425,29 @@ and [`ipa-sss-plt.pdf`](examples/ipa-sss-plt.pdf)
 ```
 
 
+## `ipa-sss-rtr` IPA SSSD restore cache files from backup
+
+### Usage
+
+```bash
+
+  ipa-sss-rtr [SSS_BAK]
+
+```
+
+### Description
+
+  Copy SSSD cache files in /var/lib/sss/db to preserve RAMDISK.
+
+### Example
+
+```bash
+
+  ipa-sss-rtr
+
+```
+
+
 ## `ipa-sss-sum` Plot summarized SynLog attribute stats
 
 ### Usage
