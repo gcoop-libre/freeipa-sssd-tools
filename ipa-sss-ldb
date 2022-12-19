@@ -1,0 +1,107 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2022 Osiris Alejandro Gomez <osiux@osiux.com>
+# Copyright (C) 2022 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+BIN="$(basename "$0")"
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` IPA SSSD cache count records
+
+### Usage
+
+\`\`\`bash
+
+  $BIN [groups|users]
+
+\`\`\`
+
+### Description
+
+Execute \`ldapsearch\` in \`/var/lib/sss/db/cache_DOMAIN.ldb\` to get
+total records of groups and users.
+
+### Example
+
+\`\`\`bash
+
+  $BIN
+
+   55 cn=groups,cn=example.com,cn=sysdb
+    1 cn=users,cn=example.com,cn=sysdb
+
+\`\`\`
+
+EOF
+exit 0
+
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+function die ()
+{
+  echo "$1"
+  exit 1
+}
+
+[[ -n "$IPA_DOMAN"     ]] || IPA_DOMAIN="$(hostname -d)"
+[[ -n "$AD_DOMAIN"     ]] || AD_DOMAIN="${IPA_DOMAIN#*.}"
+[[ -n "$LDB_DIR"       ]] || LDB_DIR="/var/lib/sss/db"
+[[ -n "$LDB_NAME"      ]] || LDB_NAME="cache_${IPA_DOMAIN}.ldb"
+[[ -n "$LDB_FILE"      ]] || LDB_FILE="$LDB_DIR/$LDB_NAME"
+[[ -n "$BASEDN_GROUPS" ]] || BASEDN_GROUPS="cn=groups,cn=$AD_DOMAIN,cn=sysdb"
+[[ -n "$BASEDN_USERS"  ]] || BASEDN_USERS="cn=users,cn=$AD_DOMAIN,cn=sysdb"
+[[ -n "$REGEX_FILTER"  ]] || REGEX_FILTER="^name:"
+[[ -n "$REGEX_TOTAL"   ]] || REGEX_TOTAL='.*'
+[[ -z "$1"             ]] || REGEX_TOTAL="$1"
+
+ldb_search()
+{
+  ldbsearch                   \
+    -H "$LDB_FILE"            \
+    -b "$1" name              \
+    -s sub "$2" 2>/dev/null   \
+    | grep -Ec "$REGEX_FILTER"
+}
+
+count_groups()
+{
+  ldb_search "$BASEDN_GROUPS" '(objectCategory=group)'
+}
+
+count_users()
+{
+  ldb_search "$BASEDN_USERS" '(objectCategory=user)'
+}
+
+show_totals()
+{
+  printf "%5d %s\\n" "$(count_groups)" "$BASEDN_GROUPS"
+  printf "%5d %s\\n" "$(count_users)"  "$BASEDN_USERS"
+}
+
+main()
+{
+  [[ -e "$LDB_FILE" ]] || die "NOT FOUND $LDB_FILE"
+  show_totals | grep -E "$REGEX_TOTAL"
+}
+
+main
