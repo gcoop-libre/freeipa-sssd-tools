@@ -102,8 +102,8 @@ then
 
   # EXIT IMMEDIATELY IF A COMMAND EXITS WITH A NON-ZERO STATUS
   set -e
-  [[ "$TOTAL_GROUPS" -eq 0 ]] || die "ABORT 0 GROUPS IN $LDB_DIR"
-  [[ "$TOTAL_USERS"  -eq 0 ]] || die "ABORT 0 USERS $LDB_DIR"
+  [[ "$TOTAL_GROUPS" -eq 0 ]] && die "ABORT 0 GROUPS IN $LDB_DIR"
+  [[ "$TOTAL_USERS"  -eq 0 ]] && die "ABORT 0 USERS $LDB_DIR"
 
 fi
 
