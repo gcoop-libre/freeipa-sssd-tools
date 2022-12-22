@@ -65,6 +65,8 @@ exit 0
 
 [[ "$1" =~ ^[-]+(h|help) ]] && usage
 
+config
+
 DATE="$(date +"$MON_DATE")"
 AVG1="$(uptime      | cut -d' ' -f12-)"
 DSRV="$(pgrep   -afc 'dirsrv')"
