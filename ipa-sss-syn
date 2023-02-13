@@ -48,6 +48,18 @@ cat << EOF
   \`userAccountControl\` with \`adUserAccountControl\` and
   \`accountExpires\` with \`adAccountExpires\`.
 
+### Datetime conversion
+
+There may be discrepancies between the stored datetime (_LDAP/FILETIME_
+format) and those displayed as a result of the conversion from _LDAP_ to
+_UNIX_ and _ISO 8601 UTC_ and _Local Timezone_ (\`-0300\` as example).
+
+  |   _AD ENDOF_ |               _LDAP_ |       _UNIX_ |              _UTC_ |            _LOCAL_ |
+  |--------------|----------------------|--------------|--------------------|--------------------|
+  | \`2023-02-10\` | \`133205580000000000\` | \`1676084400\` | \`2023-02-11 03:00\` | \`2023-02-11 00:00\` |
+  | \`2023-02-27\` | \`133220268000000000\` | \`1677553200\` | \`2023-02-28 03:00\` | \`2023-02-28 00:00\` |
+  | \`2023-03-01\` | \`133222752000000000\` | \`1677801600\` | \`2023-03-03 00:00\` | \`2023-03-02 21:00\` |
+
 ### Example
 
 \`\`\`bash
@@ -91,6 +103,8 @@ cat << EOF
 
 \`\`\`
 
+  TO_UTC                     1
+  UTC                        --utc
   physicalDeliveryOfficeName 12345678
   userAccountControl         512
   lastLogon                  2021-11-25       11:50 (132823146503300910)
@@ -125,6 +139,10 @@ cat << EOF
   \`IPA_SSS_SYN_PIVOT=(0|1) Default: 1\`
 
     Enable to show in two columns format or Disable to show one line.
+
+  \`TO_UTC=(0|1) Default: 0\`
+
+    Enable datetime conversion to _UTC_ or Local Timezone.
 
 ### Config Example
 
@@ -191,7 +209,6 @@ function defaults()
 
   USR="$USER"
   [[ -z "$SUDO_USER" ]] || USR="$SUDO_USER"
-
 }
 
 function die()
@@ -213,15 +230,22 @@ trim_lzeros()
 function ad2date()
 {
   local T
-  local O
   local U
 
   T="$1"
-  O=$((134774*24*60*60))
-  U=$((T/10000000-O))
+  # 11644473600 = 134774 days * 24 hours * 60 mintues * 60 seconds
+  # diff time between 1601-01-01 00:00 UTC and 1970-01-01 00:00 UTC
+  # the gregorian calendar operates on a 400-year cycle,
+  # and 1601 is the first year of the cycle
+  U=$((T/10000000-11644473600))
   [[ "$T" = '0'                   ]] && U='0'
   [[ "$T" = '9223372036854775807' ]] && U='0'
-  date --utc -d @$U +'%F %H:%M'
+  if [[ "$U" = 0 ]]
+  then
+    echo '1970-01-01 00:00'
+  else
+    date $UTC -d "@$U" +'%F %H:%M'
+  fi
 }
 
 function ldaps()
@@ -297,7 +321,7 @@ do
       :
     ;;
     lastUpdate:|dataExpireTimestamp:)
-      V="$(date --utc -d "@$V" +'%F %H:%M') ($V)"
+      V="$(date $UTC -d "@$V" +'%F %H:%M') ($V)"
     ;;
     *)
       continue
@@ -420,6 +444,9 @@ function debug()
 {
 
 [[ "$DEBUG" -ne 1 ]] && return
+
+cols2stderr 'TO_UTC'         "$TO_UTC"
+cols2stderr 'UTC'            "$UTC"
 
 echo "$AD_SRC" | while read -r A B C D
 do
@@ -628,6 +655,8 @@ function config()
       echo "$str"
   done)
 
+  [[ -n "$TO_UTC"    ]] || TO_UTC='0'
+  [[ "$TO_UTC" -eq 1 ]] && UTC='--utc'
 }
 
 function validate()
@@ -640,6 +669,7 @@ function validate()
   [[ -z "$LDAP_PASS"         ]] && cfg 'LDAP_PASS'
   [[ -z "$LDAP_DOMAIN"       ]] && cfg 'LDAP_DOMAIN'
   [[ -z "$LDAP_SEARCH_BASE"  ]] && cfg 'LDAP_SEARCH_BASE'
+  [[ -z "$LDB_HOST"          ]] && cfg 'LDB_HOST'
   [[ -z "$MAX_PWD_AGE"       ]] && cfg 'MAX_PWD_AGE'
   [[ -z "$MAX_PWD_AGE"       ]] && MAX_PWD_AGE=30
   [[ -z "$IPA_SSS_SYN_DEBUG" ]] || DEBUG="$IPA_SSS_SYN_DEBUG"

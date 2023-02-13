@@ -489,6 +489,18 @@ Plot log attribute stats.
   `userAccountControl` with `adUserAccountControl` and
   `accountExpires` with `adAccountExpires`.
 
+### Datetime conversion
+
+There may be discrepancies between the stored datetime (_LDAP/FILETIME_
+format) and those displayed as a result of the conversion from _LDAP_ to
+_UNIX_ and _ISO 8601 UTC_ and _Local Timezone_ (`-0300` as example).
+
+  |   _AD ENDOF_ |               _LDAP_ |       _UNIX_ |              _UTC_ |            _LOCAL_ |
+  |--------------|----------------------|--------------|--------------------|--------------------|
+  | `2023-02-10` | `133205580000000000` | `1676084400` | `2023-02-11 03:00` | `2023-02-11 00:00` |
+  | `2023-02-27` | `133220268000000000` | `1677553200` | `2023-02-28 03:00` | `2023-02-28 00:00` |
+  | `2023-03-01` | `133222752000000000` | `1677801600` | `2023-03-03 00:00` | `2023-03-02 21:00` |
+
 ### Example
 
 ```bash
@@ -532,6 +544,8 @@ Plot log attribute stats.
 
 ```
 
+  TO_UTC                     1
+  UTC                        --utc
   physicalDeliveryOfficeName 12345678
   userAccountControl         512
   lastLogon                  2021-11-25       11:50 (132823146503300910)
@@ -566,6 +580,10 @@ Plot log attribute stats.
   `IPA_SSS_SYN_PIVOT=(0|1) Default: 1`
 
     Enable to show in two columns format or Disable to show one line.
+
+  `TO_UTC=(0|1) Default: 0`
+
+    Enable datetime conversion to _UTC_ or Local Timezone.
 
 ### Config Example
 
