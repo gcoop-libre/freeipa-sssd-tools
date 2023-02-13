@@ -224,7 +224,12 @@ function ad2date()
   U=$((T/10000000-11644473600))
   [[ "$T" = '0'                   ]] && U='0'
   [[ "$T" = '9223372036854775807' ]] && U='0'
-  date --utc -d @$U +'%F %H:%M'
+  if [[ "$U" = 0 ]]
+  then
+    echo '1970-01-01 00:00'
+  else
+    date $UTC -d "@$U" +'%F %H:%M'
+  fi
 }
 
 function ldaps()
@@ -300,7 +305,7 @@ do
       :
     ;;
     lastUpdate:|dataExpireTimestamp:)
-      V="$(date --utc -d "@$V" +'%F %H:%M') ($V)"
+      V="$(date $UTC -d "@$V" +'%F %H:%M') ($V)"
     ;;
     *)
       continue
