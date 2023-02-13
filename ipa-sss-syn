@@ -648,6 +648,7 @@ function validate()
   [[ -z "$LDAP_PASS"         ]] && cfg 'LDAP_PASS'
   [[ -z "$LDAP_DOMAIN"       ]] && cfg 'LDAP_DOMAIN'
   [[ -z "$LDAP_SEARCH_BASE"  ]] && cfg 'LDAP_SEARCH_BASE'
+  [[ -z "$LDB_HOST"          ]] && cfg 'LDB_HOST'
   [[ -z "$MAX_PWD_AGE"       ]] && cfg 'MAX_PWD_AGE'
   [[ -z "$MAX_PWD_AGE"       ]] && MAX_PWD_AGE=30
   [[ -z "$IPA_SSS_SYN_DEBUG" ]] || DEBUG="$IPA_SSS_SYN_DEBUG"
