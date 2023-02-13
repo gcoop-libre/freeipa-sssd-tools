@@ -214,12 +214,14 @@ trim_lzeros()
 function ad2date()
 {
   local T
-  local O
   local U
 
   T="$1"
-  O=$((134774*24*60*60))
-  U=$((T/10000000-O))
+  # 11644473600 = 134774 days * 24 hours * 60 mintues * 60 seconds
+  # diff time between 1601-01-01 00:00 UTC and 1970-01-01 00:00 UTC
+  # the gregorian calendar operates on a 400-year cycle,
+  # and 1601 is the first year of the cycle
+  U=$((T/10000000-11644473600))
   [[ "$T" = '0'                   ]] && U='0'
   [[ "$T" = '9223372036854775807' ]] && U='0'
   date --utc -d @$U +'%F %H:%M'
