@@ -427,6 +427,9 @@ function debug()
 
 [[ "$DEBUG" -ne 1 ]] && return
 
+cols2stderr 'TO_UTC'         "$TO_UTC"
+cols2stderr 'UTC'            "$UTC"
+
 echo "$AD_SRC" | while read -r A B C D
 do
   cols2stderr "${A//:/}" "$B" "$C" "$D"
