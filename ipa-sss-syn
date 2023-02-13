@@ -191,8 +191,6 @@ function defaults()
 
   USR="$USER"
   [[ -z "$SUDO_USER" ]] || USR="$SUDO_USER"
-  [[ -n "$TO_UTC"    ]] || TO_UTC='0'
-  [[ "$TO_UTC" -eq 1 ]] && UTC='--utc'
 }
 
 function die()
@@ -636,6 +634,8 @@ function config()
       echo "$str"
   done)
 
+  [[ -n "$TO_UTC"    ]] || TO_UTC='0'
+  [[ "$TO_UTC" -eq 1 ]] && UTC='--utc'
 }
 
 function validate()
