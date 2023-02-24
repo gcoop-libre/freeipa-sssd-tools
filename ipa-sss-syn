@@ -187,6 +187,7 @@ function defaults()
   ACOLA=26
   ACOLB=16
   EXPIRE=0
+  INVALIDATE=1
   NOT_FOUND=0
   ERROR=0
   AD_UAC='0'
@@ -482,11 +483,12 @@ function expire()
 if [[ "$SS_SEC" -ne 0 ]]
 then
 
-  # FIXME dataExpireTimestamp = 1 => 1970-01-01 00:00 => 0
+  # dataExpireTimestamp <= now
   if [[ "$SS_SEC" -le "$SECONDS" ]]
   then
-    # dataExpireTimestamp = 1970-01-01
-    [[ "$SS_DEX" != '1970-01-01 00:00' ]] && EXPIRE=1
+    EXPIRE=1
+    # dataExpireTimestamp <= 1 don't need to execute sss_cache -u
+    [[ "$SS_SEC" -le 1 ]] && INVALIDATE=0
   fi
 
 fi
@@ -551,7 +553,11 @@ SS_NDX="$SS_DEX"
 
 [[ "$EXPIRE" -ne 1 ]] && return
 
-sss_cache -u "$USERFQDN" >/dev/null 2>> "$ERR"
+if [[ "$INVALIDATE" -eq 1 ]]
+then
+  sss_cache -u "$USERFQDN" >/dev/null 2>> "$ERR"
+fi
+
 id "$USERFQDN"           >/dev/null 2>> "$ERR"
 SS_SRC="$(lds "$sAMAccountName")"
 
