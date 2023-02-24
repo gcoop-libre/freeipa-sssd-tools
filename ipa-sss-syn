@@ -551,8 +551,8 @@ SS_NDX="$SS_DEX"
 
 [[ "$EXPIRE" -ne 1 ]] && return
 
-sss_cache -u "$USERNAME" >/dev/null 2>> "$ERR"
-id "$USERNAME"           >/dev/null 2>> "$ERR"
+sss_cache -u "$USERFQDN" >/dev/null 2>> "$ERR"
+id "$USERFQDN"           >/dev/null 2>> "$ERR"
 SS_SRC="$(lds "$sAMAccountName")"
 
 SS_NAX="$(ss_get_date   'adAccountExpires')"
@@ -676,7 +676,7 @@ function validate()
   [[ -z "$IPA_SSS_SYN_SHOW"  ]] || SHOW="$IPA_SSS_SYN_SHOW"
   [[ -z "$IPA_SSS_SYN_PIVOT" ]] || PIVOT="$IPA_SSS_SYN_PIVOT"
 
-  USERNAME="$sAMAccountName@$LDAP_DOMAIN"
+  USERFQDN="$sAMAccountName@$LDAP_DOMAIN"
 
 }
 
