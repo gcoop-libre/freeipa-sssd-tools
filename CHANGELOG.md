@@ -2,11 +2,29 @@
 
  - this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
-## [`Unreleased - 2023-02-13`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.6.0...develop)
+## [`Unreleased - 2023-02-27`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.6.1...develop)
 
 ### `CHANGELOG`
 
 - update ChangeLog from v0.5.0 to v0.6.0
+
+### `ipa-sss-dff`
+
+- set V (value) with whitespace when V is empty to fix Markdown syntax
+
+### `ipa-sss-syn`
+
+- replace USERNAME with USERFQDN to prevent errors
+
+### `pre-commit`
+
+- define filetype bash in shell-lint hooks config
+
+## [`v0.6.1 - 2023-02-27`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.6.0...v0.6.1) _fix format date in filter function for ipa-srv-mon.log in ipa-sss-dat_
+
+### `ipa-sss-dat`
+
+- fix format date in filter function for ipa-srv-mon.log
 
 ## [`v0.6.0 - 2023-02-13`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.5.1...v0.6.0) _add support to convert datetime to local timezone by default in ipa-sss-syn_
 
