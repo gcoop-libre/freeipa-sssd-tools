@@ -86,8 +86,9 @@ function filter()
   grep -E "^$DATE" "$TMP" > "$LOG"
 
   SRV="$DIR_DAT/$DATE-srv.log"
-  DD="${DATE//-/}"
-  grep -E "^$DD" "$IPA_SRV" | tr '_' ' ' > "$SRV"
+  grep -E "^$DATE" "$IPA_SRV" | tr '_' ' ' > "$SRV"
+
+  [[ -s "$SRV" ]] || stderror "EMPTY FILE $SRV"
 
 }
 
