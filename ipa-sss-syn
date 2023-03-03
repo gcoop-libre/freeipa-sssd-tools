@@ -562,6 +562,7 @@ SS_SRC="$(lds "$sAMAccountName")"
 SS_NAX="$(ss_get_date   'adAccountExpires')"
 SS_NAC="$(ss_get_number 'adUserAccountControl')"
 SS_NDX="$(ss_get_date   'dataExpireTimestamp')"
+SS_EDX="$(date $UTC -d "$SS_NDX" +'%s')"
 
 }
 
@@ -584,6 +585,29 @@ function error()
   [[ -z "$SS_NAC"          ]] && ERROR=31
   [[ -z "$SS_NAX"          ]] && ERROR=32
   [[ -z "$SS_NDX"          ]] && ERROR=33
+
+  # SYN errors
+  if [[ "$ERROR" -eq 0 && "$EXPIRE" -eq 1 ]]
+  then
+    SYN_ERROR=0
+
+    # dataExpireTimestamp (1 = 1970-01-01 = expired record) < NOW [epoc]
+    [[ "$SS_EDX" -lt "$START" ]] && SYN_ERROR=0
+
+    # adUserAccountControl != userAccountControl
+    [[ "$SS_NAC" != "$AD_UAC" ]] && SYN_ERROR=1
+
+    # adAccountExpires != accountExpires
+    [[ "$SS_NAX" != "$AD_EXP" ]] && SYN_ERROR="$((SYN_ERROR+2))"
+
+    # ADD PREFIX 4 TO SYN ERROR
+    [[ "$SYN_ERROR" -ne 0     ]] && ERROR="4${SYN_ERROR}"
+
+    # 40 dataExpireTimestamp
+    # 41 dataExpireTimestamp + adUserAccountControl
+    # 42 dataExpireTimestamp + adAccountExpires
+    # 43 dataExpireTimestamp + adUserAccountControl + adAccountExpires
+  fi
 
 }
 
