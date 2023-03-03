@@ -552,7 +552,11 @@ SS_NDX="$SS_DEX"
 [[ "$EXPIRE" -ne 1 ]] && return
 
 sss_cache -u "$USERFQDN" >/dev/null 2>> "$ERR"
+sleep "$WAIT_AFTER_INVALIDATE"
+
 id "$USERFQDN"           >/dev/null 2>> "$ERR"
+sleep "$WAIT_AFTER_POPULATE"
+
 SS_SRC="$(lds "$sAMAccountName")"
 
 SS_NAX="$(ss_get_date   'adAccountExpires')"
@@ -657,6 +661,9 @@ function config()
 
   [[ -n "$TO_UTC"    ]] || TO_UTC='0'
   [[ "$TO_UTC" -eq 1 ]] && UTC='--utc'
+
+  [[ -n "$WAIT_AFTER_INVALIDATE" ]] || WAIT_AFTER_INVALIDATE=0
+  [[ -n "$WAIT_AFTER_POPULATE"   ]] || WAIT_AFTER_POPULATE=0
 }
 
 function validate()
