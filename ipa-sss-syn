@@ -549,6 +549,9 @@ SS_NAC="$SS_UAC"
 SS_NAX="$SS_EXP"
 SS_NDX="$SS_DEX"
 
+## expire if dataExpireTimestamp <= NOW
+[[ "$SS_SEC" -le "$SECONDS" ]] && EXPIRE=1
+
 [[ "$EXPIRE" -ne 1 ]] && return
 
 sss_cache -u "$USERFQDN" >/dev/null 2>> "$ERR"
