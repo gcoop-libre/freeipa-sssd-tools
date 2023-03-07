@@ -259,7 +259,7 @@ do
       do
 
         V="$(get_value "$A" "$DIR_TMP/$F")"
-
+        [[ -z "$V" ]] && V=' '
         if [[ "$LAST" != 'START'  ]]
         then
           if [[ "$A" != 'seconds' ]]

@@ -2,8 +2,55 @@
 
  - this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
-## [`Unreleased - 2022-12-19`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.5.0...develop)
+## [`Unreleased - 2023-02-27`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.6.1...develop)
 
+### `CHANGELOG`
+
+- update ChangeLog from v0.5.0 to v0.6.0
+
+### `ipa-sss-dff`
+
+- set V (value) with whitespace when V is empty to fix Markdown syntax
+
+### `ipa-sss-syn`
+
+- replace USERNAME with USERFQDN to prevent errors
+
+### `pre-commit`
+
+- define filetype bash in shell-lint hooks config
+
+## [`v0.6.1 - 2023-02-27`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.6.0...v0.6.1) _fix format date in filter function for ipa-srv-mon.log in ipa-sss-dat_
+
+### `ipa-sss-dat`
+
+- fix format date in filter function for ipa-srv-mon.log
+
+## [`v0.6.0 - 2023-02-13`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.5.1...v0.6.0) _add support to convert datetime to local timezone by default in ipa-sss-syn_
+
+### `CHANGELOG`
+
+- add ChangeLog from v0.1.0 to v0.5.0
+
+### `ipa-src-hlp`
+
+- update commands help with support for local time zone in ipa-sss-syn
+
+### `ipa-sss-syn`
+
+- improve help adding TO_UTC environment variable and datetime conversion example
+- show TO_UTC and UTC variables in debug when IPA_SSS_SYN_DEBUG is enabled
+- move default TO_UTC=0 from defaults to config function, to allow define TO_UTC in .ipa-config when TO_UTC is not defined as environment variable
+- validate LDB_HOST option in config
+- return 1970-01-01 00:00 when UNIX time is 0 and use --utc in date convertion using variable UTC define by TO_UTC option
+- use 11644473600 as constant to calculate datetime diff between LDAP and UNIX time
+- define TO_UTC=0 to convert datetime to local timezone by default
+
+## [`v0.5.1 - 2022-12-22`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.5.0...v0.5.1) _add config function in ipa-srv-mon to read configuration from .ipa-config_
+
+### `ipa-srv-mon`
+
+- add config function to read configuration from .ipa-config
 
 ## [`v0.5.0 - 2022-12-19`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.4.0...v0.5.0) _add ipa-sss-ldb to count cache records, add ipa-sss-rsy to backup and ipa-sss-rtr to restore SSSD cache to preserve RAMDISK_
 
