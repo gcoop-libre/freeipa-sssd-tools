@@ -1,0 +1,210 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2023 Osiris Alejandro Gomez <osiux@osiux.com>
+# Copyright (C) 2023 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+[[ -n "$BASH_DEBUG" ]] && set -x
+
+function dmy2iso()
+{
+  local DATE="${1% *}" TIME="${1#* }"
+  echo "${DATE}" | tr '/' ' '| while read DD MM YY T
+  do
+    date -d "$YY-$MM-$DD $TIME" +'%F %T' 
+  done
+}
+
+function get_iface()
+{
+  ip r s default | awk '/default via/ {print $5}'
+}
+
+function get_ip()
+{
+  ip r | awk "/dev $IFACE.*link src/ {print \$9}" | head -1
+}
+
+function get_gw()
+{
+  ip r s default | awk '/^default via/ {print $3}'
+}
+
+function get_fqdn()
+{
+  hostname -f
+}
+
+function get_serial()
+{
+  sudo cat /sys/class/dmi/id/product_serial
+}
+
+function sssctl_config_check()
+{
+  local RETURN='NO ERRORS FOUND'
+
+  if [[ -e "$SSSD_CONF" ]]
+  then
+    RETURN="$(sudo sssctl config-check 2>/dev/null | head -1)"
+    [[ "$?" -eq 0 ]] || RETURN="INVALID CONFIG"
+  else
+    RETURN="NOT FOUND $SSSD_CONF"
+  fi
+
+  echo "$RETURN"
+}
+
+function get_ad()
+{
+  sudo grep ad_domain "$SSSD_CONF" \
+    | head -1                      \
+    | cut -d= -f2                  \
+    | tr -d ' '
+}
+
+function get_sss_cnf()
+{
+  local RETURN='NOT FOUND $SSSD_CONF'
+
+  if [[ -e "$SSSD_CONF" ]]
+  then
+  RETURN="$(sudo grep "$1" "$SSSD_CONF" \
+    | head -1                           \
+    | cut -d= -f2                       \
+    | tr -d ' ')"
+  fi
+
+  echo "$RETURN"
+}
+
+function get_ipa_dom()
+{
+  get_sss_cnf ipa_domain
+}
+
+function get_ipa_srv()
+{
+  get_sss_cnf ipa_server
+}
+
+function get_srv()
+{
+  dig +short SRV _$1._tcp.$2 \
+    | head -1                \
+    | awk '{print $4}'
+}
+
+function get_sssd()
+{
+  sudo sssctl domain-status --online --start "$(hostname -d)" 2>&1 \
+    | cut -d: -f2-                                                 \
+    | sed 's/^ \+//g'                                              \
+    | sed 's/ \+$//g'
+}
+
+function get_krb5()
+{
+  sudo kinit -V -kt /etc/krb5.keytab 2>&1    \
+    | grep -o "Authenticated to Kerberos v5" \
+    | cut -d' ' -f1
+}
+
+function get_tgt()
+{
+  local RETURN=''
+
+  if ! command -v klist >/dev/null
+  then
+    RETURN='NOT FOUND klist COMMAND'
+  else
+    KRBTGT_EXPIRES="$(sudo klist | awk '/krbtgt/ {print $3,$4}')"
+    KRBTGT_DATE="$(dmy2iso "$KRBTGT_EXPIRES")"
+    KRBTGT_EXPOC="$(date -d "$KRBTGT_DATE" +%s)"
+    RETURN="$KRBTGT_DATE"
+    NOW="$(date -d 'now' +'%s')"
+    [[ "$NOW" -gt "$KRBTGT_EXPOC" ]] && RETURN+=" EXPIRED"
+   fi
+   echo "$RETURN"
+}
+
+function msg()
+{
+  local NOW
+
+  PERCENT="$(echo "$ITEM $TOTAL" | awk '{printf "%3d",($1/$2)*100}')"
+  NOW="$(date +'%F %T')"
+  printf "%s %4s [%02d] %s\\n" "$NOW" "${PERCENT}%" "$ITEM" "${1}"
+  ITEM=$((ITEM+1))
+  sleep "$SLEEP"
+}
+
+function get_a()
+{
+  local NS=''
+  [[ -z "$2" ]] || NS="@$2"
+  dig +short A "$1" $NS
+}
+
+function get_ptr()
+{
+  dig +short -x "$1" @$2
+}
+
+function get_total()
+{
+  grep -E '^msg ' "$0" | grep -v grep | wc -l
+}
+
+function main()
+{
+
+[[ -n "$SLEEP"     ]] || SLEEP=0.1
+[[ -n "$SSSD_CONF" ]] || SSSD_CONF='/etc/sssd/sssd.conf'
+
+declare -i ITEM=1 PERCENT=0 TOTAL="$(get_total)"
+
+IFACE="$(get_iface)"
+IP="$(get_ip)"
+GW="$(get_gw)"
+FQDN="$(get_fqdn)"
+AD="$(get_ad)"
+IPA_DOM="$(get_ipa_dom)"
+IPA_SRV="$(get_ipa_srv)"
+IPA_IP="$(get_a "$IPA_SRV")"
+
+msg "Check Hostname: ${FQDN}"
+msg "Check Serial: $(get_serial)"
+msg "Check IP: ${IP}"
+msg "Check Gateway: ${GW}"
+msg "Check SSSD Config: $(sssctl_config_check)"
+msg "Check AD Domain: $AD"
+msg "Check IPA Domain: $IPA_DOM"
+msg "Check IPA Server: $IPA_SRV"
+msg "Check AD SRV LDAP: $(get_srv ldap $AD)"
+msg "Check AD SRV KRB5: $(get_srv kerberos $AD)"
+msg "Check IPA SRV LDAP: $(get_srv ldap $IPA_DOM)"
+msg "Check IPA SRV KRB5: $(get_srv kerberos $IPA_DOM)"
+msg "Check IPA DNS Query: $IPA_IP"
+msg "Check PTR: $IP $(get_ptr "$IP" "$GW") @$GW"
+msg "Check PTR: $IP $(get_ptr "$IP" "$IPA_SRV") @$IPA_IP"
+msg "Check SSSD Status: $(get_sssd)"
+msg "Check Kerberos Keytab: $(get_krb5)"
+msg "Check Kerberos TGT: $(get_tgt)"
+
+}
+
+main "$@"
