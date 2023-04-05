@@ -2,18 +2,38 @@
 
  - this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
-## [`Unreleased - 2023-02-27`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.6.1...develop)
+## [`Unreleased - 2023-03-07`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.7.2...develop)
+
+
+## [`v0.7.2 - 2023-03-07`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.7.1...v0.7.2) _replace date -d with date $UTC and accountExpires=0 or dataExpireTimestamp=1 with 1970-01-01 00:00 in ipa-sss-syn_
+
+### `ipa-sss-syn`
+
+- when dataExpireTimestamp = 1 replace with 1970-01-01 00:00
+- replace date -d with date $UTC and date = 0 with 1970-01-01 00:00
+
+## [`v0.7.1 - 2023-03-07`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.7.0...v0.7.1) _force invalidate cache when dataExpireTimestamp <= NOW in ipa-sss-syn_
+
+### `ipa-sss-syn`
+
+- force invalidate cache when dataExpireTimestamp <= NOW
+
+## [`v0.7.0 - 2023-03-06`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.6.1...v0.7.0) _report errors (40,41,42,43) when failed syn and add wait after invalidate and populate (Default 0s) in ipa-sss-syn_
 
 ### `CHANGELOG`
 
+- add v0.6.1 and update Unreleased
 - update ChangeLog from v0.5.0 to v0.6.0
 
 ### `ipa-sss-dff`
 
+- add align2col dependency to align 2 strings columns
 - set V (value) with whitespace when V is empty to fix Markdown syntax
 
 ### `ipa-sss-syn`
 
+- report errors (40,41,42,43) when failed syn
+- add wait after invalidate and populate (Default 0s)
 - replace USERNAME with USERFQDN to prevent errors
 
 ### `pre-commit`
