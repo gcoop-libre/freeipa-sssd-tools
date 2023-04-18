@@ -10,7 +10,7 @@ import random
 class Sync(Resource):
     def get(self, userid):
         """userid is sAMAccount"""
-        sqlqry = "INSERT INTO accounts VALUES (?,?,?)"
+        sqlqry = "INSERT INTO accounts VALUES (?,?,?,?)"
         current_app.config.from_pyfile("config/settings.py")
         logging.basicConfig(
             filename=current_app.config["LOGFILE"],
@@ -29,7 +29,7 @@ class Sync(Resource):
             random.seed(time.time())
             time.sleep(random.randint(1, 1000) / 1000)
             str2hash = str(time.time()) + userid + str(random.randint(0, 1000))
-            row = (hashlib.md5(str2hash.encode()).hexdigest(), time.time(), userid)
+            row = (hashlib.md5(str2hash.encode()).hexdigest(), time.time(), userid, 'syn')
             try:
                 with con:
                     cur.execute(sqlqry, row)
@@ -48,7 +48,7 @@ class Sync(Resource):
         if not run:
             retval = "OK"
             return jsonify(
-                {"retval": retval, "hash": row[0], "time": row[1], "sAMAccount": row[2]}
+                {"retval": retval, "hash": row[0], "time": row[1], "sAMAccount": row[2], "action": row[3]}
             )
         else:
             logging.error("op=sync acct=" + userid + " status=could not queue account")
@@ -58,5 +58,6 @@ class Sync(Resource):
                     "hash": "Error",
                     "time": "Error",
                     "sAMAccount": userid,
+                    "action": 'syn',
                 }
             )
