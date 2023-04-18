@@ -36,13 +36,14 @@ class Query(Resource):
                             "%Y-%m-%d %H:%M:%S"
                         ),
                         "account": row[2],
+                        "action": row[3],
                         "dequeue_time": datetime.datetime.fromtimestamp(
-                            row[3]
+                            row[4]
                         ).strftime("%Y-%m-%d %H:%M:%S"),
-                        "finish_time": datetime.datetime.fromtimestamp(row[4]).strftime(
+                        "finish_time": datetime.datetime.fromtimestamp(row[5]).strftime(
                             "%Y-%m-%d %H:%M:%S"
                         ),
-                        "result": row[5],
+                        "result": row[6],
                     }
                 )
 
