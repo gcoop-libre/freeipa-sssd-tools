@@ -19,7 +19,7 @@ class Query(Resource):
             level=logging.INFO,
             datefmt="%Y-%m-%d %H:%M:%S",
         )
-        logging.info("op=qry acct=" + userid + " status=recived")
+        logging.info("op=qry acct=" + userid + " status=received")
         with sqlite3.connect(current_app.config["DBPROCS"]) as con:
             cur = con.cursor()
             cur.execute(sqlqry, (userid,))
@@ -36,13 +36,14 @@ class Query(Resource):
                             "%Y-%m-%d %H:%M:%S"
                         ),
                         "account": row[2],
+                        "action": row[3],
                         "dequeue_time": datetime.datetime.fromtimestamp(
-                            row[3]
+                            row[4]
                         ).strftime("%Y-%m-%d %H:%M:%S"),
-                        "finish_time": datetime.datetime.fromtimestamp(row[4]).strftime(
+                        "finish_time": datetime.datetime.fromtimestamp(row[5]).strftime(
                             "%Y-%m-%d %H:%M:%S"
                         ),
-                        "result": row[5],
+                        "result": row[6],
                     }
                 )
 

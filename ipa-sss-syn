@@ -183,6 +183,7 @@ function defaults()
   IPA_CONFIG="$HOME/.ipa-config"
   DEBUG=0
   SHOW=1
+  LAST=1
   PIVOT=1
   ACOLA=26
   ACOLB=16
@@ -667,6 +668,7 @@ function params()
 {
 
   [[ -z "$1" ]] && die "EMPTY sAMAccountName"
+  [[ -z "$IPA_SSS_SYN_LAST" ]] || LAST="$IPA_SSS_SYN_LAST"
 
   sAMAccountName="$1"
 
@@ -674,8 +676,11 @@ function params()
 
   if [[ "$DUPLICATE" -ne 0 ]]
   then
-    printf "\\n%s user=%s sAMAccountName=%s error=%0d " "$NOW" "$USR" "$sAMAccountName" 2
-    die "ALREADY PROCESS sAMAccountName=$1 IN LAST MINUTE"
+    if [[ "$LAST" -eq 1 ]]
+    then
+      printf "\\n%s user=%s sAMAccountName=%s error=%0d " "$NOW" "$USR" "$sAMAccountName" 2
+      die "ALREADY PROCESS sAMAccountName=$1 IN LAST MINUTE"
+    fi
   fi
 
 }

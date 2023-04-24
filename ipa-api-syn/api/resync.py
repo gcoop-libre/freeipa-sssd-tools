@@ -7,7 +7,7 @@ import logging
 import random
 
 
-class Sync(Resource):
+class ReSync(Resource):
     def get(self, userid):
         """userid is sAMAccount"""
         sqlqry = "INSERT INTO accounts VALUES (?,?,?,?)"
@@ -24,21 +24,21 @@ class Sync(Resource):
         run = True
         retval = "Error"
         cnt = 1
-        logging.info("op=sync acct=" + userid + " status=synching")
+        logging.info("op=resyn acct=" + userid + " status=synching")
         while run:
             random.seed(time.time())
             time.sleep(random.randint(1, 1000) / 1000)
             str2hash = str(time.time()) + userid + str(random.randint(0, 1000))
-            row = (hashlib.md5(str2hash.encode()).hexdigest(), time.time(), userid, 'syn')
+            row = (hashlib.md5(str2hash.encode()).hexdigest(), time.time(), userid, 'resyn')
             try:
                 with con:
                     cur.execute(sqlqry, row)
                     con.commit()
                     run = False
-                    logging.info("op=sync acct=" + userid + " status=queued")
+                    logging.info("op=resyn acct=" + userid + " status=queued")
             except sqlite3.OperationalError as e:
                 logging.warning(
-                    "op=sync acct="
+                    "op=resyn acct="
                     + userid
                     + " status=SQLite3 Operational Error msg=%s",
                     e,
@@ -51,13 +51,13 @@ class Sync(Resource):
                 {"retval": retval, "hash": row[0], "time": row[1], "sAMAccount": row[2], "action": row[3]}
             )
         else:
-            logging.error("op=sync acct=" + userid + " status=could not queue account")
+            logging.error("op=resyn acct=" + userid + " status=could not queue account")
             return jsonify(
                 {
                     "retval": retval,
                     "hash": "Error",
                     "time": "Error",
                     "sAMAccount": userid,
-                    "action": 'syn',
+                    "action": "resyn",
                 }
             )
