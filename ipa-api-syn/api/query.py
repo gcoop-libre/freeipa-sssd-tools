@@ -19,7 +19,7 @@ class Query(Resource):
             level=logging.INFO,
             datefmt="%Y-%m-%d %H:%M:%S",
         )
-        logging.info("op=qry acct=" + userid + " status=recived")
+        logging.info("op=qry acct=" + userid + " status=received")
         with sqlite3.connect(current_app.config["DBPROCS"]) as con:
             cur = con.cursor()
             cur.execute(sqlqry, (userid,))
