@@ -2,6 +2,7 @@ from flask import Flask
 from flask_restful import Api
 from api.root import Root
 from api.sync import Sync
+from api.resync import ReSync
 from api.query import Query
 
 """
@@ -18,4 +19,5 @@ qry_routes = [
 
 api.add_resource(Root, "/", "/syn", "/qry")
 api.add_resource(Sync, "/syn/<string:userid>")
+api.add_resource(ReSync, "/resyn/<string:userid>")
 api.add_resource(Query, *qry_routes)
