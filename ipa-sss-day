@@ -82,34 +82,35 @@ exit 0
 
 [[ "$1" =~ ^[-]+(h|help) ]] && usage
 
-LOG='ipa-sss-syn.log'
+[[ -n "$LOG"     ]] || LOG='/var/log/ipa-sss-syn.log'
+[[ -z "$1"       ]] || LOG="$1"
+[[ -n "$DIR_BAK" ]] || DIR_BAK="$PWD/bak"
+[[ -e "$LOG"     ]] || die "NOT FOUND LOG FILE $LOG"
+[[ -n "$DATE"    ]] || DATE="$2"
 
-[[ -z "$1"   ]] || LOG="$1"
-[[ -e "$LOG" ]] || die "NOT FOUND LOG FILE $LOG"
+DATE_LST="$(mktemp --suffix .log)"
+NAME="$(basename "$LOG" .log)"
 
-DATE_LST="$(mktemp)"
-
-if [[ -z "$2" ]]
+if [[ -z "$DATE" ]]
 then
   awk '{print $1}' "$LOG" | sort -u > "$DATE_LST"
 else
-  echo "$2"                         > "$DATE_LST"
+  echo "$DATE"                      > "$DATE_LST"
 fi
 
-mkdir -p bak
-
-[[ -n "$XSTART" ]] || XSTART='07:00'
-[[ -n "$XEND"   ]] || XEND='19:00'
+[[ -d "$DIR_BAK" ]] || mkdir -p "$DIR_BAK"
+[[ -n "$XSTART"  ]] || XSTART='07:00'
+[[ -n "$XEND"    ]] || XEND='19:00'
 
 while read -r DATE _
 do
 
-  DATE_LOG="$DATE-$LOG"
-  DATE_BAK="bak/$DATE-$LOG.$(date +%s)"
+  DATE_LOG="$DATE-$NAME.log"
+  DATE_BAK="$DIR_BAK/$DATE-$NAME-$(date +%s).gz"
   ESTART="$(date -d "$DATE $XSTART" '+%s')"
   EEND="$(date -d "$DATE $XEND" '+%s')"
 
-  [[ -e "$DATE_LOG" ]] && cp -f "$DATE_LOG" "$DATE_BAK"
+  [[ -e "$DATE_LOG" ]] && gzip -9 -c "$DATE_LOG" > "$DATE_BAK"
 
   grep -E "^$DATE " "$LOG" | while read -r D TIME OTHERS
   do
