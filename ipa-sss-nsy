@@ -70,7 +70,7 @@ TMP="$(mktemp)"
 
 awk "/$FILTER/ {print \$4}" "$LOG" | sort -u > "$TMP"
 
-[[ -s "$TMP" ]] || die "NOT FOUND sss_cache=0 RECORDS"
+[[ -s "$TMP" ]] || success "NOT FOUND sss_cache=0 RECORDS NOTHING TO DO"
 
 NO_SYNC="$(wc -l "$TMP" | awk '{print $1}')"
 stderror "FOUND $NO_SYNC sAMAccountName WITH sss_cache=0 IN $LOG"
