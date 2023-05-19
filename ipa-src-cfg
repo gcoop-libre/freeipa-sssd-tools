@@ -58,6 +58,12 @@ function die()
   exit 1
 }
 
+function success ()
+{
+  echo "OK: $1"
+  exit 0
+}
+
 function cfg()
 {
   die "$EMPTY $1 TRY DEFINE IN $IPA_CONFIG"
