@@ -65,6 +65,7 @@ exit 0
 [[ -z "$1"          ]] || LOG="$1"
 [[ -e "$LOG"        ]] || die "NOT FOUND LOG FILE $LOG"
 [[ -n "$OUT"        ]] || OUT="$DATE-error-ipa-sss-syn.log"
+[[ -z "$3"          ]] || OUT="$3"
 
 awk '!/error=0/ {print $4}' "$LOG" \
   | sort -u \
