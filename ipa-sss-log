@@ -71,8 +71,8 @@ R_DATE='[0-9]+-[0-9]+-[0-9]+'
 [[ -z "$3"   ]] || EXCLUDE="$3"
 [[ -e "$LOG" ]] || die "NOT FOUND $LOG"
 
-NAME="$(basename "$LOG" .log)"
-OUT="${DIR_PDF}/${NAME}.md"
+[[ -n "$NAME" ]] || NAME="$(basename "$LOG" .log)"
+[[ -n "$OUT"  ]] || OUT="${DIR_PDF}/${NAME}.md"
 
 if [[ -z "$EXCLUDE" ]]
 then
