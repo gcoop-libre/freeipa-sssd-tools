@@ -9,6 +9,7 @@ before_script:
   - uname -a
   - shellcheck --version
   - /usr/bin/env python --version
+  - pylint --version
 
 stages:
   - shell-check
