@@ -8,6 +8,7 @@ before_script:
   - du --max-depth=1
   - uname -a
   - shellcheck --version
+  - /usr/bin/env python --version
 
 stages:
   - shell-check
