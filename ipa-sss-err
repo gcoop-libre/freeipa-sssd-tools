@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2023 Osiris Alejandro Gomez <osiux@osiux.com>
+# Copyright (C) 2023 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# shellcheck disable=SC1090
+# shellcheck disable=SC1091
+# shellcheck disable=SC2129
+
+DIR_BIN="$(dirname "$0")" && source "$DIR_BIN/ipa-src-cfg"
+
+function usage()
+{
+cat << EOF
+
+## \`$BIN\` Filter SynLog of sAMAccountName with at least one sync error
+
+### Usage:
+
+\`\`\`bash
+
+  $BIN [IPA_SSS_SYN_LOG]
+
+\`\`\`
+
+### Description
+
+First get the \`sAMAccountName\` not match with \`error=0\` and then get
+all other sync records for each \`sAMAccountName\`
+
+### Example:
+
+\`\`\`bash
+
+	$BIN
+
+  10 2023-06-12-error-ipa-sss-syn.log
+
+\`\`\`
+
+EOF
+exit 0
+}
+
+[[ "$1" =~ ^[-]+(h|help) ]] && usage
+
+[[ -n "$BASH_DEBUG" ]] && set -x
+[[ -n "$DATE"       ]] || DATE="$(date +%F)"
+[[ -z "$2"          ]] || DATE="$2"
+[[ -n "$LOG"        ]] || LOG="$DATE-ipa-sss-syn.log"
+[[ -z "$1"          ]] || LOG="$1"
+[[ -e "$LOG"        ]] || die "NOT FOUND LOG FILE $LOG"
+[[ -n "$OUT"        ]] || OUT="$DATE-error-ipa-sss-syn.log"
+[[ -z "$3"          ]] || OUT="$3"
+
+awk '!/error=0/ {print $4}' "$LOG" \
+  | sort -u \
+  | while read -r sAMAccountName
+    do
+      grep "$sAMAccountName" "$LOG"
+    done > "$OUT" && wc -l "$OUT"

@@ -2,8 +2,53 @@
 
  - this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
-## [`Unreleased - 2023-03-07`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.7.2...develop)
+## [`Unreleased - 2023-04-25`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.8.0...develop)
 
+
+## [`v0.8.0 - 2023-04-25`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.7.3...v0.8.0) _add /resyn in ipa-api-syn to run ipa-sss-syn with IPA_SSS_SYN_LAST=1 to skip error=2 validation_
+
+### `ipa-api-syn`
+
+- change python files permissions from 644 to 755
+
+### `ipa-api-syn/api`
+
+- fix typo, replace recived with received
+- add resync.py to resync
+- add column action in query.py
+- add column action in sync.py
+
+### `ipa-api-syn/app`
+
+- import ReSync and map route /resyn
+
+### `ipa-api-syn/db`
+
+- add column action with sync as default in process.db
+- add column action with sync as default in tosync.db
+
+### `ipa-api-syn/ipa-que-syn`
+
+- add column action in ipa-api-syn.py, define IPA_SSS_SYN_LAST=0 when action = resyn
+
+### `ipa-sss-syn`
+
+- exit with error 2 when sAMAccountName was processed in the last minute, only when IPA_SSS_SYN_LAST=1 (default)
+
+## [`v0.7.3 - 2023-04-05`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.7.2...v0.7.3) _ipa-sss-plt: plot syn errors with error code in label_
+
+### `CHANGELOG`
+
+- update Unreleased, add Releases v0.7.0, v0.7.1 and v0.7.2
+
+### `ipa-sss-dat`
+
+- collect syn errors in YYYY-MM-DD-syn-err.dat
+- enable set -x when BASH_DEBUG is defined
+
+### `ipa-sss-plt`
+
+- plot syn errors with error code in label
 
 ## [`v0.7.2 - 2023-03-07`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.7.1...v0.7.2) _replace date -d with date $UTC and accountExpires=0 or dataExpireTimestamp=1 with 1970-01-01 00:00 in ipa-sss-syn_
 
@@ -418,4 +463,3 @@
 ### `README`
 
 - fix typo in gcoop-libre.freeipa_sssd_tools repositories
-
