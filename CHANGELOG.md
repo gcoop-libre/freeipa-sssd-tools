@@ -1,9 +1,51 @@
-# [_FREEIPA-SSSD-TOOLS CHANGELOG_](https://gitlab.com/gcoop-libre/freeipa-sssd-tools.git)
+# [_FREEIPA-SSSD-TOOLS CHANGELOG_](https://gitlab.com/gcoop-libre/freeipa-sssd-tools)
 
  - this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
-## [`Unreleased - 2023-04-25`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.8.0...develop)
+## [`Unreleased - 2023-06-28`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.9.0...develop)
 
+
+## [`v0.9.0 - 2023-06-28`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.8.0...v0.9.0) _add ipa-sss-err for filter SynLog of sAMAccountName with at least one sync error (error!=0), add ipa-sss-exp for filter SynLog when record date match with accountExpires date and add ipa-sss-nsy for filter SynLog of sAMAccountName with at least one no sync (sss_cache=0)_
+
+### `CHANGELOG`
+
+- update Unreleased, add Release v0.7.3
+
+### `gitlab-ci`
+
+- get pylint version
+- get python version
+
+### `ipa-src-cfg`
+
+- add function success to show message and exit 0
+
+### `ipa-sss-day`
+
+- refactor parameters and backup previous log
+
+### `ipa-sss-err`
+
+- define OUT log file with third parameter when it is not empty
+- add script for Filter SynLog of sAMAccountName with at least one sync error (error!=0)
+
+### `ipa-sss-exp`
+
+- add script for Filter SynLog when record date match with accountExpires date
+
+### `ipa-sss-log`
+
+- exit without error when input log file is empty
+- set OUT only when undefined to allow it to be set as an environment variable
+
+### `ipa-sss-nsy`
+
+- exit without error when sss_cache=0 records not found
+- add script for Filter SynLog of sAMAccountName with at least one no sync (sss_cache=0)
+
+### `ipa-sss-plt`
+
+- execute set -x when BASH_DEBUG is enabled
 
 ## [`v0.8.0 - 2023-04-25`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.7.3...v0.8.0) _add /resyn in ipa-api-syn to run ipa-sss-syn with IPA_SSS_SYN_LAST=1 to skip error=2 validation_
 
