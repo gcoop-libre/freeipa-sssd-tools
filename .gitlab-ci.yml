@@ -9,6 +9,7 @@ before_script:
   - uname -a
   - shellcheck --version
   - python --version
+  - lsb_release -a
 
 stages:
   - shell-check
