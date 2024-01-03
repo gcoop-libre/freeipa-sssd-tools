@@ -22,9 +22,9 @@
 function dmy2iso()
 {
   local DATE="${1% *}" TIME="${1#* }"
-  echo "${DATE}" | tr '/' ' '| while read DD MM YY T
+  echo "${DATE}" | tr '/' ' ' | while read -r DD MM YY _
   do
-    date -d "$YY-$MM-$DD $TIME" +'%F %T' 
+    date -d "$YY-$MM-$DD $TIME" +'%F %T'
   done
 }
 
@@ -60,7 +60,8 @@ function sssctl_config_check()
   if [[ -e "$SSSD_CONF" ]]
   then
     RETURN="$(sudo sssctl config-check 2>/dev/null | head -1)"
-    [[ "$?" -eq 0 ]] || RETURN="INVALID CONFIG"
+    RC="$?"
+    [[ "$RC" -eq 0 ]] || RETURN="INVALID CONFIG"
   else
     RETURN="NOT FOUND $SSSD_CONF"
   fi
@@ -78,7 +79,7 @@ function get_ad()
 
 function get_sss_cnf()
 {
-  local RETURN='NOT FOUND $SSSD_CONF'
+  local RETURN="NOT FOUND $SSSD_CONF"
 
   if [[ -e "$SSSD_CONF" ]]
   then
@@ -103,8 +104,10 @@ function get_ipa_srv()
 
 function get_srv()
 {
-  dig +short SRV _$1._tcp.$2 \
-    | head -1                \
+  [[ -z "$2" ]] && return
+
+  dig +short SRV "_$1._tcp.$2" \
+    | head -1                  \
     | awk '{print $4}'
 }
 
@@ -154,19 +157,22 @@ function msg()
 
 function get_a()
 {
-  local NS=''
-  [[ -z "$2" ]] || NS="@$2"
-  dig +short A "$1" $NS
+  if [[ -z "$2" ]]
+  then
+    dig +short A "$1"
+  else
+    dig +short A "$1" "$2"
+  fi
 }
 
 function get_ptr()
 {
-  dig +short -x "$1" @$2
+  dig +short -x "$1" "@$2"
 }
 
 function get_total()
 {
-  grep -E '^msg ' "$0" | grep -v grep | wc -l
+  grep -cE '^msg ' "$0"
 }
 
 function main()
@@ -175,8 +181,9 @@ function main()
 [[ -n "$SLEEP"     ]] || SLEEP=0.1
 [[ -n "$SSSD_CONF" ]] || SSSD_CONF='/etc/sssd/sssd.conf'
 
-declare -i ITEM=1 PERCENT=0 TOTAL="$(get_total)"
+declare -i ITEM=1 PERCENT=0 TOTAL=0
 
+TOTAL="$(get_total)"
 IFACE="$(get_iface)"
 IP="$(get_ip)"
 GW="$(get_gw)"
@@ -194,10 +201,10 @@ msg "Check SSSD Config: $(sssctl_config_check)"
 msg "Check AD Domain: $AD"
 msg "Check IPA Domain: $IPA_DOM"
 msg "Check IPA Server: $IPA_SRV"
-msg "Check AD SRV LDAP: $(get_srv ldap $AD)"
-msg "Check AD SRV KRB5: $(get_srv kerberos $AD)"
-msg "Check IPA SRV LDAP: $(get_srv ldap $IPA_DOM)"
-msg "Check IPA SRV KRB5: $(get_srv kerberos $IPA_DOM)"
+msg "Check AD SRV LDAP: $(get_srv ldap "$AD")"
+msg "Check AD SRV KRB5: $(get_srv kerberos "$AD")"
+msg "Check IPA SRV LDAP: $(get_srv ldap "$IPA_DOM")"
+msg "Check IPA SRV KRB5: $(get_srv kerberos "$IPA_DOM")"
 msg "Check IPA DNS Query: $IPA_IP"
 msg "Check PTR: $IP $(get_ptr "$IP" "$GW") @$GW"
 msg "Check PTR: $IP $(get_ptr "$IP" "$IPA_SRV") @$IPA_IP"
