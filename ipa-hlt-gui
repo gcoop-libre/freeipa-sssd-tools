@@ -26,8 +26,8 @@ function dialog()
 	  --no-cancel      \
 	  --progress       \
     --auto-close     \
-	  --width=$WIDTH   \
-	  --height=$HEIGHT
+    --width="$WIDTH"   \
+    --height="$HEIGHT"
 }
 
 function main()
@@ -40,13 +40,13 @@ function main()
 [[ -n "$HEIGHT"  ]] || HEIGHT=400
 
 MSG="# "
-[[ -n "$DIR" ]] && DIR="$(dirname $0)"
+[[ -n "$DIR" ]] || DIR="$(dirname "$0")"
 [[ -d "$DIR" ]] && export PATH="$DIR:$PATH"
 
 ipa-hlt-chk | while read -r DATE TIME PERCENT ITEM
 do
   echo "${PERCENT//%/}"
-  MSG+="$TIME $ITEM\\n"
+  MSG+="$DATE $TIME $ITEM\\n"
   echo "$MSG"
 done | dialog
 
