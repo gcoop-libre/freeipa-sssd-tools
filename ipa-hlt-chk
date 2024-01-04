@@ -71,9 +71,9 @@ function sssctl_config_check()
 
 function get_ad()
 {
-  sudo grep ad_domain "$SSSD_CONF" \
-    | head -1                      \
-    | cut -d= -f2                  \
+  sudo grep ad_domain "$SSSD_CONF" 2>/dev/null \
+    | head -1                                  \
+    | cut -d= -f2                              \
     | tr -d ' '
 }
 
@@ -83,9 +83,9 @@ function get_sss_cnf()
 
   if [[ -e "$SSSD_CONF" ]]
   then
-  RETURN="$(sudo grep "$1" "$SSSD_CONF" \
-    | head -1                           \
-    | cut -d= -f2                       \
+  RETURN="$(sudo grep "$1" "$SSSD_CONF" 2>/dev/null \
+    | head -1                                       \
+    | cut -d= -f2                                   \
     | tr -d ' ')"
   fi
 
