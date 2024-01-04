@@ -21,10 +21,10 @@
 
 function dialog()
 {
-  zenity             \
-    --title "$TITLE" \
-	  --no-cancel      \
-	  --progress       \
+  zenity               \
+    --title "$TITLE"   \
+    --no-cancel        \
+    --progress         \
     --timeout "$SLEEP" \
     --width="$WIDTH"   \
     --height="$HEIGHT" || exit 0
