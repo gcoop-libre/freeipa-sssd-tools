@@ -25,7 +25,7 @@ function dialog()
     --title "$TITLE" \
 	  --no-cancel      \
 	  --progress       \
-    --auto-close     \
+    --timeout "$SLEEP" \
     --width="$WIDTH"   \
     --height="$HEIGHT"
 }
@@ -35,7 +35,7 @@ function main()
 
 [[ -n "$DISPLAY" ]] || export DISPLAY=:0
 [[ -n "$TITLE"   ]] || TITLE="IPA Health Check"
-[[ -n "$SLEEP"   ]] || SLEEP=1
+[[ -n "$SLEEP"   ]] || SLEEP=3
 [[ -n "$WIDTH"   ]] || WIDTH=600
 [[ -n "$HEIGHT"  ]] || HEIGHT=400
 
