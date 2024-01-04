@@ -27,7 +27,7 @@ function dialog()
 	  --progress       \
     --timeout "$SLEEP" \
     --width="$WIDTH"   \
-    --height="$HEIGHT"
+    --height="$HEIGHT" || exit 0
 }
 
 function main()
