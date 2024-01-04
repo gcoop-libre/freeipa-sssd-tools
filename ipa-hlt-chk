@@ -169,7 +169,12 @@ function get_a()
 
 function get_ptr()
 {
-  dig +short -x "$1" "@$2"
+  if [[ -z "$2" ]]
+  then
+    dig +short -x "$1"
+  else
+    [[ "$2" =~ ^NOT\ FOUND ]] || dig +short -x "$1" "@$2"
+  fi
 }
 
 function get_total()
