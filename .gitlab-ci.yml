@@ -8,7 +8,7 @@ before_script:
   - du --max-depth=1
   - uname -a
   - shellcheck --version
-  - python --version
+  - /usr/bin/env python --version
   - lsb_release -a
 
 stages:
