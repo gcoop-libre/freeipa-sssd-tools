@@ -10,6 +10,7 @@ before_script:
   - shellcheck --version
   - /usr/bin/env python --version
   - pylint --version
+  - lsb_release -a
 
 stages:
   - shell-check
