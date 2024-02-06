@@ -2,8 +2,39 @@
 
  - this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
-## [`Unreleased - 2023-06-28`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.9.0...develop)
+## [`Unreleased - 2024-02-06`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.9.1...develop)
 
+
+## [`v0.9.1 - 2024-02-06`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.9.0...v0.9.1) _add ipa-hlt-chk and ipa-hlt-gui to check Network, DNS, NTP, SSSD, KRB5 and others dependencies to determine health of IPA_
+
+### `CHANGELOG`
+
+- update Unreleased, add v0.9.0
+
+### `gitlab-ci`
+
+- get pylint version
+- improve getting python version
+- run lsb_release in before_script to get OS information
+- show python version in before_script
+
+### `ipa-hlt-chk`
+
+- workaround to avoid executing dig on invalid NS in get_ptr function
+- send output to syslog using logger when LOGGER=1 (default PRIORITY=user.info)
+- send stderr to /dev/null in get_add and get_sss_cnf functions
+- define PS4 with EPOCHREALTIME, LINENO and FUNCNAME when BASH_DEBUG is enabled
+- fix errors reported by shellcheck (SC2016|SC2034|SC2086|SC2126|SC2155|SC2162|SC2181)
+- check Network, DNS, NTP, SSSD, KRB5 and others dependencies to determine health of IPA
+
+### `ipa-hlt-gui`
+
+- fix indentation in dialog function
+- make sure the dialog exits with 0 to prevent zenity from exiting with error or entering a loop
+- replace autoclose with timeout (default 3 seconds) to ensure dialog is displayed before autoclose
+- fix errors reported by shellcheck SC2086 and SC2034 (add DATE to output message)
+- add the run directory to a PATH environment
+- use zenity to graphical show results of ipa-hlt-chk
 
 ## [`v0.9.0 - 2023-06-28`](https://gitlab.com/gcoop-libre/freeipa-sssd-tools/-/compare/v0.8.0...v0.9.0) _add ipa-sss-err for filter SynLog of sAMAccountName with at least one sync error (error!=0), add ipa-sss-exp for filter SynLog when record date match with accountExpires date and add ipa-sss-nsy for filter SynLog of sAMAccountName with at least one no sync (sss_cache=0)_
 
