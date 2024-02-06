@@ -1,10 +1,22 @@
-# _FreeIPA_ _SSSD_ Tools
+# _FreeIPA SSSD Tools_
 
-[[_TOC_]]
-
-## `ipa-api-syn` _API_ to synchronize _FreeIPA_ cache
-
-See API Help in [`README-ipa-api-syn.md`](README-ipa-api-syn.md)
+| _date_     | _tag_      | _description_                                                                                                                                                                                                                                                                  |
+|------------|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 2024-02-06 | `  v0.9.1` | add ipa-hlt-chk and ipa-hlt-gui to check Network, DNS, NTP, SSSD, KRB5 and others dependencies to determine health of IPA                                                                                                                                                      |
+| 2023-06-28 | `  v0.9.0` | add ipa-sss-err for filter SynLog of sAMAccountName with at least one sync error (error!=0), add ipa-sss-exp for filter SynLog when record date match with accountExpires date and add ipa-sss-nsy for filter SynLog of sAMAccountName with at least one no sync (sss_cache=0) |
+| 2023-04-25 | `  v0.8.0` | add /resyn in ipa-api-syn to run ipa-sss-syn with IPA_SSS_SYN_LAST=1 to skip error=2 validation                                                                                                                                                                                |
+| 2023-04-05 | `  v0.7.3` | ipa-sss-plt: plot syn errors with error code in label                                                                                                                                                                                                                          |
+| 2023-03-07 | `  v0.7.2` | replace date -d with date $UTC and accountExpires=0 or dataExpireTimestamp=1 with 1970-01-01 00:00 in ipa-sss-syn                                                                                                                                                              |
+| 2023-03-07 | `  v0.7.1` | force invalidate cache when dataExpireTimestamp <= NOW in ipa-sss-syn                                                                                                                                                                                                          |
+| 2023-03-06 | `  v0.7.0` | report errors (40,41,42,43) when failed syn and add wait after invalidate and populate (Default 0s) in ipa-sss-syn                                                                                                                                                             |
+| 2023-02-27 | `  v0.6.1` | fix format date in filter function for ipa-srv-mon.log in ipa-sss-dat                                                                                                                                                                                                          |
+| 2023-02-13 | `  v0.6.0` | add support to convert datetime to local timezone by default in ipa-sss-syn                                                                                                                                                                                                    |
+| 2022-12-22 | `  v0.5.1` | add config function in ipa-srv-mon to read configuration from .ipa-config                                                                                                                                                                                                      |
+| 2022-12-19 | `  v0.5.0` | add ipa-sss-ldb to count cache records, add ipa-sss-rsy to backup and ipa-sss-rtr to restore SSSD cache to preserve RAMDISK                                                                                                                                                    |
+| 2022-11-28 | `  v0.4.0` | update scripts to generate and plot metrics and get and sync users                                                                                                                                                                                                             |
+| 2022-05-03 | `  v0.3.0` | add API to enqueue cache synchronization requests and process them sequentially                                                                                                                                                                                                |
+| 2022-05-02 | `  v0.2.0` | added tools to split, filter, analyze and graph log files                                                                                                                                                                                                                      |
+| 2022-05-02 | `  v0.1.0` | first public version of ipa-sss-syn                                                                                                                                                                                                                                            |
 
 ## Tools Overview
 
@@ -65,7 +77,10 @@ Add to ``/root/.bashrc``:
 Use `gcoop-libre.freeipa_sssd_tools` from:
 
 - https://gitlab.com/gcoop-libre/ansible_role_freeipa_sssd_tools
+- https://gitlab.com/osiux/ansible_role_freeipa_sssd_tools
 - https://github.com/gcoop-libre/ansible_role_freeipa_sssd_tools
+- https://github.com/osiris/ansible_role_freeipa_sssd_tools
+- https://codeberg.org/osiux/ansible_role_freeipa_sssd_tools
 
 ## License
 
