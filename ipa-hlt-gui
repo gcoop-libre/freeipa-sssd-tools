@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2023 Osiris Alejandro Gomez <osiux@osiux.com>
+# Copyright (C) 2023 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+[[ -n "$BASH_DEBUG" ]] && set -x
+
+function dialog()
+{
+  zenity               \
+    --title "$TITLE"   \
+    --no-cancel        \
+    --progress         \
+    --timeout "$SLEEP" \
+    --width="$WIDTH"   \
+    --height="$HEIGHT" || exit 0
+}
+
+function main()
+{
+
+[[ -n "$DISPLAY" ]] || export DISPLAY=:0
+[[ -n "$TITLE"   ]] || TITLE="IPA Health Check"
+[[ -n "$SLEEP"   ]] || SLEEP=3
+[[ -n "$WIDTH"   ]] || WIDTH=600
+[[ -n "$HEIGHT"  ]] || HEIGHT=400
+
+MSG="# "
+[[ -n "$DIR" ]] || DIR="$(dirname "$0")"
+[[ -d "$DIR" ]] && export PATH="$DIR:$PATH"
+
+ipa-hlt-chk | while read -r DATE TIME PERCENT ITEM
+do
+  echo "${PERCENT//%/}"
+  MSG+="$DATE $TIME $ITEM\\n"
+  echo "$MSG"
+done | dialog
+
+}
+
+main "$@"
